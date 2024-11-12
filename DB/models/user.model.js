@@ -32,7 +32,6 @@ const userSchema = new Schema(
       type: String,
       enum: ["user", "admin"],
       default: "user",
-      required: true,
     },
     wishlist: [Types.ObjectId],
     isConfirmed: {

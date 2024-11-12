@@ -10,7 +10,7 @@ import randomstring from "randomstring";
 import cartModel from "../../../../DB/models/cart.model.js";
 
 export const register = asyncHandler(async (req, res, next) => {
-  const { userName, email, password ,role} = req.body;
+  const { userName, email, password } = req.body;
   const isUser = await userModel.findOne({ email });
   if (isUser) {
     return next(new Error("email already registered !", { cause: 409 }));
@@ -20,45 +20,39 @@ export const register = asyncHandler(async (req, res, next) => {
     password,
     Number(process.env.SALT_ROUND)
   );
-  const activationCode = crypto.randomBytes(64).toString("hex");
 
   const user = await userModel.create({
     userName,
     email,
     password: hashPassword,
-    role,
-    activationCode,
   });
+  const code = crypto.randomInt(100000, 999999).toString();
 
-  const link = `https://backend-kappa-beige.vercel.app/auth/confirmEmail/${activationCode}`;
+  user.forgetCode = code;
+  await user.save();
 
   const isSent = await sendEmail({
     to: email,
-    subject: "Activate Account",
-    html: signupTemp(link),
+    subject: "Verify Account",
+    html: resetPassword(code),
   });
-  return isSent
-    ? res
-        .status(200)
-        .json({ success: true, message: "Please review Your email!" })
-    : next(new Error("something went wrong!", { cause: 400 }));
-});
-
-export const activationAccount = asyncHandler(async (req, res, next) => {
-  const user = await userModel.findOneAndUpdate(
-    { activationCode: req.params.activationCode },
-    { isConfirmed: true, $unset: { activationCode: 1 } }
+  const token = jwt.sign(
+    { id: user._id, email: user.email },
+    process.env.TOKEN_SIGNATURE
   );
 
-  if (!user) {
-    return next(new Error("User Not Found!", { cause: 404 }));
-  }
-  if (user.role == "user") {
-    await cartModel.create({ user: user._id });
-  }
-  return res
-    .status(200)
-    .send("Congratulation, Your Account is now activated, try to login");
+  await tokenModel.create({
+    token,
+    user: user._id,
+    agent: req.headers["user-agent"],
+  });
+  return isSent
+    ? res.status(200).json({
+        success: true,
+        data: { token},
+
+      })
+    : next(new Error("something went wrong!", { cause: 400 }));
 });
 
 export const login = asyncHandler(async (req, res, next) => {
@@ -81,8 +75,7 @@ export const login = asyncHandler(async (req, res, next) => {
 
   const token = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.TOKEN_KEY,
-    { expiresIn: "2d" }
+    process.env.TOKEN_KEY
   );
 
   await tokenModel.create({

@@ -40,11 +40,7 @@ router.post(
   userController.register
 );
 
-router.get(
-  "/confirmEmail/:activationCode",
-  isValidation(Validators.activateSchema),
-  userController.activationAccount
-);
+
 
 router.post("/login", isValidation(Validators.login), userController.login);
 
