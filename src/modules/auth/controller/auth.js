@@ -38,7 +38,7 @@ export const register = asyncHandler(async (req, res, next) => {
   });
   const token = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.TOKEN_SIGNATURE
+    process.env.TOKEN_KEY
   );
 
   await tokenModel.create({
@@ -49,8 +49,7 @@ export const register = asyncHandler(async (req, res, next) => {
   return isSent
     ? res.status(200).json({
         success: true,
-        data: { token},
-
+        data: { token },
       })
     : next(new Error("something went wrong!", { cause: 400 }));
 });
