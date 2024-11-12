@@ -40,8 +40,6 @@ export const registerSchema = joi
   })
   .required();
 
-
-
 export const login = joi
   .object({
     email: joi.string().email().required(),
@@ -61,5 +59,16 @@ export const resetPassword = joi
     password: joi.string().required(),
     forgetCode: joi.string().required(),
     confirmPassword: joi.string().valid(joi.ref("password")).required(),
+  })
+  .required();
+export const verify = joi
+  .object({
+    forgetCode: joi
+      .string()
+      .messages({
+        "string.empty": "Forget code cannot be empty.",
+        "any.required": "Forget code is required.",
+      })
+      .required(),
   })
   .required();

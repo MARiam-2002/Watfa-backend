@@ -86,10 +86,10 @@ export const login = asyncHandler(async (req, res, next) => {
   user.status = "online";
   await user.save();
 
-  return res.status(200).json({ 
+  return res.status(200).json({
     success: true,
     data: { token },
-   });
+  });
 });
 
 //send forget Code
@@ -101,10 +101,7 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
     return next(new Error("Invalid email!", { cause: 400 }));
   }
 
-  const code = randomstring.generate({
-    length: 5,
-    charset: "numeric",
-  });
+  const code = crypto.randomInt(100000, 999999).toString();
 
   user.forgetCode = code;
   await user.save();
@@ -112,6 +109,26 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
   return (await sendEmail({
     to: user.email,
     subject: "Reset Password",
+    html: resetPassword(code),
+  }))
+    ? res.status(200).json({ success: true, message: "check you email!" })
+    : next(new Error("Something went wrong!", { cause: 400 }));
+});
+
+export const resendCode = asyncHandler(async (req, res, next) => {
+  const user = await userModel.findOne({ email: req.user.email });
+  if (!user) {
+    return next(new Error("Invalid email!", { cause: 400 }));
+  }
+
+  const code = crypto.randomInt(100000, 999999).toString();
+
+  user.forgetCode = code;
+  await user.save();
+
+  return (await sendEmail({
+    to: user.email,
+    subject: "Verify Account",
     html: resetPassword(code),
   }))
     ? res.status(200).json({ success: true, message: "check you email!" })

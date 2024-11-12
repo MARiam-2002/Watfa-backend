@@ -3,6 +3,7 @@ import * as Validators from "./auth.validation.js";
 import { isValidation } from "../../middleware/validation.middleware.js";
 import * as userController from "./controller/auth.js";
 import passport from "passport";
+import { isAuthenticated } from "../../middleware/authentication.middleware.js";
 const router = Router();
 
 router.get(
@@ -51,9 +52,19 @@ router.patch(
   isValidation(Validators.forgetCode),
   userController.sendForgetCode
 );
+
+router.patch("/resendCode", isAuthenticated, userController.resendCode);
+
+
 router.patch(
   "/resetPassword",
   isValidation(Validators.resetPassword),
   userController.resetPasswordByCode
+);
+router.patch(
+  "/VerifyCode",
+  isAuthenticated,
+  isValidation(Validators.verify),
+  userController.VerifyCode
 );
 export default router;
