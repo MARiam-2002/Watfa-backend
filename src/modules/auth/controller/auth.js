@@ -86,7 +86,10 @@ export const login = asyncHandler(async (req, res, next) => {
   user.status = "online";
   await user.save();
 
-  return res.status(200).json({ success: true, result: token });
+  return res.status(200).json({ 
+    success: true,
+    data: { token },
+   });
 });
 
 //send forget Code
@@ -113,6 +116,35 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
   }))
     ? res.status(200).json({ success: true, message: "check you email!" })
     : next(new Error("Something went wrong!", { cause: 400 }));
+});
+
+export const VerifyCode = asyncHandler(async (req, res, next) => {
+  const user = await userModel.findOne({ email: req.user.email });
+
+  if (!user.forgetCode) {
+    return next(new Error("Please resend the forget code.", { status: 400 }));
+  }
+
+  if (user.forgetCode !== req.body.forgetCode) {
+    return next(new Error("Invalid code!", { status: 400 }));
+  }
+
+  const updateData = { $unset: { forgetCode: 1 } };
+  let message = "Go to reset new password";
+
+  if (!user.isConfirmed) {
+    user.isConfirmed = true;
+    await user.save();
+    message = "Account successfully verified";
+  }
+
+  await userModel.updateOne({ email: req.user.email }, updateData);
+
+  return res.status(200).json({
+    success: true,
+    status: 200,
+    data: { message },
+  });
 });
 
 export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
