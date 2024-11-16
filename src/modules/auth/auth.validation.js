@@ -18,6 +18,29 @@ export const registerSchema = joi
         "any.required": "Username is required.",
       })
       .required(),
+    role: joi
+      .string()
+      .valid("bayer", "seller")
+      .messages({
+        "string.base": "Role must be a string.",
+        "string.empty": "Role is required",
+        "any.only": "Role must be either 'bayer' or 'seller'",
+        "any.required": "Role is required",
+      })
+      .required(),
+    phoneNumber: joi
+      .string()
+      .pattern(/^\d{10,15}$/)
+      .when("role", {
+        is: "seller",
+        then: joi.required().messages({
+          "string.empty": "Phone number is required for sellers.",
+          "string.pattern.base":
+            "Phone number must be between 10 and 15 digits.",
+          "any.required": "Phone number is required for sellers.",
+        }),
+        otherwise: joi.optional(),
+      }),
     email: joi
       .string()
       .email()

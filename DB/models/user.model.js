@@ -8,6 +8,16 @@ const userSchema = new Schema(
       min: 3,
       max: 20,
     },
+    phoneNumber: { type: String },
+    document: {
+      url: {
+        type: String,
+      },
+      id: {
+        type: String,
+      },
+    },
+
     googleId: String,
     email: {
       type: String,
@@ -30,8 +40,8 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["bayer", "seller"],
+      default: "bayer",
     },
     wishlist: [Types.ObjectId],
     isConfirmed: {

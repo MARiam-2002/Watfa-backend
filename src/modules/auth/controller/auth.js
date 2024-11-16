@@ -8,12 +8,31 @@ import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
 import randomstring from "randomstring";
 import cartModel from "../../../../DB/models/cart.model.js";
+import cloudinary from "../../../utils/cloud.js";
 
 export const register = asyncHandler(async (req, res, next) => {
-  const { userName, email, password } = req.body;
+  const { userName, email, password, role, phoneNumber } = req.body;
+
   const isUser = await userModel.findOne({ email });
   if (isUser) {
-    return next(new Error("email already registered !", { cause: 409 }));
+    return next(new Error("email already registered!", { cause: 409 }));
+  }
+
+  if (!["buyer", "seller"].includes(role)) {
+    return next(new Error("Invalid role provided!", { cause: 400 }));
+  }
+
+  if (role === "seller") {
+    if (!phoneNumber) {
+      return next(
+        new Error("Phone number is required for sellers!", { cause: 400 })
+      );
+    }
+    if (!req.file) {
+      return next(
+        new Error("Document is required for sellers!", { cause: 400 })
+      );
+    }
   }
 
   const hashPassword = bcryptjs.hashSync(
@@ -25,9 +44,20 @@ export const register = asyncHandler(async (req, res, next) => {
     userName,
     email,
     password: hashPassword,
+    role,
+    phoneNumber: role === "seller" ? phoneNumber : null,
   });
-  const code = crypto.randomInt(100000, 999999).toString();
 
+  if (role === "seller" && req.file) {
+    const { secure_url, public_id } = await cloudinary.uploader.upload(
+      file.path,
+      { folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}` }
+    );
+    user.document = { url: secure_url, id: public_id };
+    await user.save();
+  }
+
+  const code = crypto.randomInt(100000, 999999).toString();
   user.forgetCode = code;
   await user.save();
 
@@ -36,8 +66,9 @@ export const register = asyncHandler(async (req, res, next) => {
     subject: "Verify Account",
     html: resetPassword(code),
   });
+
   const token = jwt.sign(
-    { id: user._id, email: user.email },
+    { id: user._id, email: user.email, role: user.role },
     process.env.TOKEN_KEY
   );
 
@@ -46,10 +77,11 @@ export const register = asyncHandler(async (req, res, next) => {
     user: user._id,
     agent: req.headers["user-agent"],
   });
+
   return isSent
     ? res.status(200).json({
         success: true,
-        data: { token },
+        data: { userName, role, token },
       })
     : next(new Error("something went wrong!", { cause: 400 }));
 });
@@ -88,7 +120,7 @@ export const login = asyncHandler(async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    data: { token },
+    data: { userName: user.userName, role: user.role, token },
   });
 });
 
