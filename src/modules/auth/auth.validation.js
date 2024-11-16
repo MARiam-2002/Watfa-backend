@@ -28,17 +28,17 @@ export const registerSchema = joi
         "any.required": "Role is required",
       })
       .required(),
-    phoneNumber: Joi.string()
+    phoneNumber: joi.string()
       .pattern(/^((\+966|0)?5\d{8})$/)
       .when("role", {
         is: "seller",
-        then: Joi.required().messages({
+        then: joi.required().messages({
           "string.pattern.base":
             "Phone number must be a valid Saudi number starting with +966 or 05 and contain 9 digits.",
           "string.empty": "Phone number is required for sellers.",
           "any.required": "Phone number is required for sellers.",
         }),
-        otherwise: Joi.optional(),
+        otherwise: joi.optional(),
       }),
     email: joi
       .string()
