@@ -20,11 +20,11 @@ export const registerSchema = joi
       .required(),
     role: joi
       .string()
-      .valid("bayer", "seller")
+      .valid("buyer", "seller")
       .messages({
         "string.base": "Role must be a string.",
         "string.empty": "Role is required",
-        "any.only": "Role must be either 'bayer' or 'seller'",
+        "any.only": "Role must be either 'buyer' or 'seller'",
         "any.required": "Role is required",
       })
       .required(),

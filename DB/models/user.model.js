@@ -40,8 +40,8 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["bayer", "seller"],
-      default: "bayer",
+      enum: ["buyer", "seller"],
+      default: "buyer",
     },
     wishlist: [Types.ObjectId],
     isConfirmed: {
