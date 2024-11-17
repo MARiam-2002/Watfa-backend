@@ -28,7 +28,8 @@ export const registerSchema = joi
         "any.required": "Role is required",
       })
       .required(),
-    phoneNumber: joi.string()
+    phoneNumber: joi
+      .string()
       .pattern(/^((\+966|0)?5\d{8})$/)
       .when("role", {
         is: "seller",
