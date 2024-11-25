@@ -322,7 +322,8 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
       (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // Concatenate phone root and first suffix
   }));
   res.status(200).json({
-    success: true,
+        success: true,
+
     message: "All countries with flags",
     data: { countriesWithFlagsAndPhoneCodes },
   });
