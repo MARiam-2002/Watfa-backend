@@ -312,10 +312,15 @@ export const verifyFaceAPI = asyncHandler(
 
 export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
   try {
-    const response = await fetch("https://restcountries.com/v3.1/all");
+    const response = await fetch("https://restcountries.com/v3.1/all", {
+      method: "GET",
+      timeout: 10000, // 10 seconds timeout
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch country data. Status: ${response.status}`);
+      throw new Error(
+        `Failed to fetch country data. Status: ${response.status}`
+      );
     }
 
     const countries = await response.json();
@@ -323,8 +328,8 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
     const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
       name: country.name.common,
       flag: country.flags?.png || country.flags?.svg,
-      phoneCode: 
-        country.idd?.root + 
+      phoneCode:
+        country.idd?.root +
         (country.idd?.suffixes ? country.idd.suffixes[0] : ""),
     }));
 
@@ -334,9 +339,10 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
       status: true,
       code: 200,
     });
-
   } catch (error) {
-    console.error("Error fetching countries:", error);  
-    return next(new Error(`Error fetching countries: ${error.message}`, { cause: 500 }));
+    console.error("Error fetching countries:", error);
+    return next(
+      new Error(`Error fetching countries: ${error.message}`, { cause: 500 })
+    );
   }
 });
