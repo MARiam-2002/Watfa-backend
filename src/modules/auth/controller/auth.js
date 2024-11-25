@@ -311,20 +311,35 @@ export const verifyFaceAPI = asyncHandler(
 );
 
 export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
-  const response = await fetch("https://restcountries.com/v3.1/all");
-  const countries = await response.json();
+  try {
+    const response = await fetch("https://restcountries.com/v3.1/all");
 
-  const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
-    name: country.name.common,
-    flag: country.flags.png, // or country.flags.svg for SVG format
-    phoneCode:
-      country.idd?.root +
-      (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // Concatenate phone root and first suffix
-  }));
-  res.status(200).json({
-        success: true,
+    // التحقق من حالة استجابة الـ API
+    if (!response.ok) {
+      throw new Error("Failed to fetch country data");
+    }
 
-    message: "All countries with flags",
-    data: { countriesWithFlagsAndPhoneCodes },
-  });
+    const countries = await response.json();
+
+    // تعديل البيانات لتضمين الاسم والعلم ورمز الهاتف
+    const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
+      name: country.name.common,
+      flag: country.flags?.png || country.flags?.svg, // التعامل مع PNG أو SVG بناءً على البيانات المتاحة
+      phoneCode: 
+        country.idd?.root + 
+        (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // دمج الجذر واللاحقة
+    }));
+
+    // إرسال الاستجابة
+    res.status(200).json({
+      message: "All countries with flags",
+      data: countriesWithFlagsAndPhoneCodes,
+      status: true,
+      code: 200,
+    });
+
+  } catch (error) {
+    // في حالة حدوث أي خطأ أثناء جلب البيانات أو المعالجة
+    return next(new Error(`Error fetching countries: ${error.message}`, { cause: 500 }));
+  }
 });
