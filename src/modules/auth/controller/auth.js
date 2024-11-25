@@ -6,16 +6,26 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../../../utils/sendEmails.js";
 import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
-import randomstring from "randomstring";
-import cartModel from "../../../../DB/models/cart.model.js";
+// import randomstring from "randomstring";
+// import cartModel from "../../../../DB/models/cart.model.js";
 import cloudinary from "../../../utils/cloud.js";
 
 export const register = asyncHandler(async (req, res, next) => {
-  const { userName, email, password, role, phoneNumber } = req.body;
+  const {
+    userName,
+    email,
+    password,
+    role,
+    phoneNumber,
+    companyName,
+    country,
+    fingerprint,
+    faceData,
+  } = req.body;
 
   const isUser = await userModel.findOne({ email });
   if (isUser) {
-    return next(new Error("email already registered!", { cause: 409 }));
+    return next(new Error("Email is already registered!", { cause: 409 }));
   }
 
   if (!["buyer", "seller"].includes(role)) {
@@ -33,6 +43,16 @@ export const register = asyncHandler(async (req, res, next) => {
         new Error("Document is required for sellers!", { cause: 400 })
       );
     }
+    if (!companyName) {
+      return next(
+        new Error("Company name is required for sellers!", { cause: 400 })
+      );
+    }
+    if (!country) {
+      return next(
+        new Error("Country is required for sellers!", { cause: 400 })
+      );
+    }
   }
 
   const hashPassword = bcryptjs.hashSync(
@@ -46,18 +66,24 @@ export const register = asyncHandler(async (req, res, next) => {
     password: hashPassword,
     role,
     phoneNumber: role === "seller" ? phoneNumber : null,
+    companyName: role === "seller" ? companyName : null,
+    country: role === "seller" ? country : null,
+    fingerprint: fingerprint || null,
+    faceData: faceData || null,
   });
 
   if (role === "seller" && req.file) {
     const { secure_url, public_id } = await cloudinary.uploader.upload(
-      file.path,
-      { folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}` }
+      req.file.path,
+      {
+        folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}`,
+      }
     );
     user.document = { url: secure_url, id: public_id };
     await user.save();
   }
 
-  const code = crypto.randomInt(100000, 999999).toString();
+  const code = crypto.randomInt(1000, 9999).toString();
   user.forgetCode = code;
   await user.save();
 
@@ -66,6 +92,12 @@ export const register = asyncHandler(async (req, res, next) => {
     subject: "Verify Account",
     html: resetPassword(code),
   });
+
+  if (!isSent) {
+    return next(
+      new Error("Failed to send verification email!", { cause: 500 })
+    );
+  }
 
   const token = jwt.sign(
     { id: user._id, email: user.email, role: user.role },
@@ -78,41 +110,50 @@ export const register = asyncHandler(async (req, res, next) => {
     agent: req.headers["user-agent"],
   });
 
-  return isSent
-    ? res.status(200).json({
-        success: true,
-        data: { userName, role, token },
-      })
-    : next(new Error("something went wrong!", { cause: 400 }));
+  return res.status(201).json({
+    success: true,
+    message: "Registration successful!",
+    data: {
+      userName,
+      role,
+      token,
+    },
+  });
 });
 
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
+
   const user = await userModel.findOne({ email });
 
   if (!user) {
-    return next(new Error("Invalid-Email", { cause: 400 }));
+    return next(new Error("Invalid Email. Please try again.", { cause: 400 }));
   }
 
   if (!user.isConfirmed) {
-    return next(new Error("Un activated Account", { cause: 400 }));
+    return next(
+      new Error("Account is not activated. Please verify your email.", {
+        cause: 400,
+      })
+    );
   }
 
-  const match = bcryptjs.compareSync(password, user.password);
-
-  if (!match) {
-    return next(new Error("Invalid-Password", { cause: 400 }));
+  const isPasswordValid = bcryptjs.compareSync(password, user.password);
+  if (!isPasswordValid) {
+    return next(
+      new Error("Invalid Password. Please try again.", { cause: 400 })
+    );
   }
 
   const token = jwt.sign(
-    { id: user._id, email: user.email },
+    { id: user._id, email: user.email, role: user.role },
     process.env.TOKEN_KEY
   );
 
   await tokenModel.create({
     token,
     user: user._id,
-    agent: req.headers["user-agent"],
+    agent: req.headers["user-agent"] || "unknown",
   });
 
   user.status = "online";
@@ -120,7 +161,12 @@ export const login = asyncHandler(async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    data: { userName: user.userName, role: user.role, token },
+    message: "Login successful.",
+    data: {
+      userName: user.userName,
+      role: user.role,
+      token,
+    },
   });
 });
 
@@ -133,7 +179,7 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
     return next(new Error("Invalid email!", { cause: 400 }));
   }
 
-  const code = crypto.randomInt(100000, 999999).toString();
+  const code = crypto.randomInt(1000, 9999).toString();
 
   user.forgetCode = code;
   await user.save();
@@ -153,7 +199,7 @@ export const resendCode = asyncHandler(async (req, res, next) => {
     return next(new Error("Invalid email!", { cause: 400 }));
   }
 
-  const code = crypto.randomInt(100000, 999999).toString();
+  const code = crypto.randomInt(1000, 9999).toString();
 
   user.forgetCode = code;
   await user.save();
@@ -222,4 +268,62 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
   });
 
   return res.status(200).json({ success: true, message: "Try to login!" });
+});
+
+export const verifyFingerprintAPI = asyncHandler(
+  asyncHandler(async (req, res, next) => {
+    const { fingerprint } = req.body;
+    const user = await userModel.findOne({ email: req.user.email });
+
+    if (!user) {
+      return next(new Error("User not found!", { cause: 404 }));
+    }
+
+    if (!(user.fingerprint === fingerprint)) {
+      return next(
+        new Error("Fingerprint verification failed!", { cause: 400 })
+      );
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Fingerprint verified successfully!" });
+  })
+);
+
+export const verifyFaceAPI = asyncHandler(
+  asyncHandler(async (req, res, next) => {
+    const { faceData } = req.body;
+    const user = await userModel.findOne({ email: req.user.email });
+
+    if (!user) {
+      return next(new Error("User not found!", { cause: 404 }));
+    }
+
+    if (!(user.faceData === faceData)) {
+      return next(new Error("Face verification failed!", { cause: 400 }));
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Face verified successfully!" });
+  })
+);
+
+export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
+  const response = await fetch("https://restcountries.com/v3.1/all");
+  const countries = await response.json();
+
+  const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
+    name: country.name.common,
+    flag: country.flags.png, // or country.flags.svg for SVG format
+    phoneCode:
+      country.idd?.root +
+      (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // Concatenate phone root and first suffix
+  }));
+  res.status(200).json({
+    success: true,
+    message: "All countries with flags",
+    data: { countriesWithFlagsAndPhoneCodes },
+  });
 });

@@ -2,6 +2,8 @@ import mongoose, { Schema, Types, model } from "mongoose";
 
 const userSchema = new Schema(
   {
+    companyName: { type: String },
+
     userName: {
       type: String,
       required: true,
@@ -17,7 +19,11 @@ const userSchema = new Schema(
         type: String,
       },
     },
-
+    country: { type: String },
+    businessType: { type: String, enum: ["Registered Business", "Freelancer"] },
+    services: { type: [String], enum: ["In-Store", "Online"] },
+    fingerprint: { type: String },
+    faceData: { type: String },
     googleId: String,
     email: {
       type: String,
@@ -32,7 +38,6 @@ const userSchema = new Schema(
       type: String,
       enum: ["male", "female"],
     },
-    phone: String,
     status: {
       type: String,
       enum: ["online", "offline"],
