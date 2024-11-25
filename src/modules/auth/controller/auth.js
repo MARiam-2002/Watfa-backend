@@ -314,23 +314,20 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
   try {
     const response = await fetch("https://restcountries.com/v3.1/all");
 
-    // التحقق من حالة استجابة الـ API
     if (!response.ok) {
-      throw new Error("Failed to fetch country data");
+      throw new Error(`Failed to fetch country data. Status: ${response.status}`);
     }
 
     const countries = await response.json();
 
-    // تعديل البيانات لتضمين الاسم والعلم ورمز الهاتف
     const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
       name: country.name.common,
-      flag: country.flags?.png || country.flags?.svg, // التعامل مع PNG أو SVG بناءً على البيانات المتاحة
+      flag: country.flags?.png || country.flags?.svg,
       phoneCode: 
         country.idd?.root + 
-        (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // دمج الجذر واللاحقة
+        (country.idd?.suffixes ? country.idd.suffixes[0] : ""),
     }));
 
-    // إرسال الاستجابة
     res.status(200).json({
       message: "All countries with flags",
       data: countriesWithFlagsAndPhoneCodes,
@@ -339,7 +336,7 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
     });
 
   } catch (error) {
-    // في حالة حدوث أي خطأ أثناء جلب البيانات أو المعالجة
+    console.error("Error fetching countries:", error);  
     return next(new Error(`Error fetching countries: ${error.message}`, { cause: 500 }));
   }
 });
