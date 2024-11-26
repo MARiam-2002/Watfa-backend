@@ -9,6 +9,7 @@ import tokenModel from "../../../../DB/models/token.model.js";
 // import randomstring from "randomstring";
 // import cartModel from "../../../../DB/models/cart.model.js";
 import cloudinary from "../../../utils/cloud.js";
+import fetch from "node-fetch";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
@@ -310,27 +311,23 @@ export const verifyFaceAPI = asyncHandler(
   })
 );
 
+
+
 export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
   try {
-    const response = await fetch("https://restcountries.com/v3.1/all", {
-      method: "GET",
-      timeout: 10000, // 10 seconds timeout
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch country data. Status: ${response.status}`
-      );
-    }
-
+    const response = await fetch("https://restcountries.com/v3.1/all");
     const countries = await response.json();
 
+    if (!Array.isArray(countries)) {
+      return next(new Error("Failed to fetch countries data!", { cause: 500 }));
+    }
+
     const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
-      name: country.name.common,
-      flag: country.flags?.png || country.flags?.svg,
+      name: country.name.common,  
+      flag: country.flags.png,  
       phoneCode:
-        country.idd?.root +
-        (country.idd?.suffixes ? country.idd.suffixes[0] : ""),
+        country.idd?.root + 
+        (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // كود الهاتف
     }));
 
     res.status(200).json({
@@ -341,8 +338,7 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching countries:", error);
-    return next(
-      new Error(`Error fetching countries: ${error.message}`, { cause: 500 })
-    );
+    return next(new Error("Error fetching countries: " + error.message, { cause: 500 }));
   }
 });
+
