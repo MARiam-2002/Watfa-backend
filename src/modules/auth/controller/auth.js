@@ -9,7 +9,7 @@ import tokenModel from "../../../../DB/models/token.model.js";
 // import randomstring from "randomstring";
 // import cartModel from "../../../../DB/models/cart.model.js";
 import cloudinary from "../../../utils/cloud.js";
-import fetch from "node-fetch";
+import { countries } from "countries-list";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
@@ -311,34 +311,13 @@ export const verifyFaceAPI = asyncHandler(
   })
 );
 
+export const allCountryWithFlag = asyncHandler((req, res) => {
+  const countriesData = Object.keys(countries).map((code) => ({
+    name: countries[code].name,
+    code: code,
+    phone: `+${countries[code].phone}`,
+    flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
+  }));
 
-
-export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
-  try {
-    const response = await fetch("https://restcountries.com/v3.1/all");
-    const countries = await response.json();
-
-    if (!Array.isArray(countries)) {
-      return next(new Error("Failed to fetch countries data!", { cause: 500 }));
-    }
-
-    const countriesWithFlagsAndPhoneCodes = countries.map((country) => ({
-      name: country.name.common,  
-      flag: country.flags.png,  
-      phoneCode:
-        country.idd?.root + 
-        (country.idd?.suffixes ? country.idd.suffixes[0] : ""),
-    }));
-
-    res.status(200).json({
-      message: "All countries with flags",
-      data: countriesWithFlagsAndPhoneCodes,
-      status: true,
-      code: 200,
-    });
-  } catch (error) {
-    console.error("Error fetching countries:", error);
-    return next(new Error("Error fetching countries: " + error.message, { cause: 500 }));
-  }
+  res.json(countriesData);
 });
-
