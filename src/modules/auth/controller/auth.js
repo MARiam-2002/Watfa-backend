@@ -327,7 +327,7 @@ export const allCountryWithFlag = asyncHandler(async (req, res, next) => {
       flag: country.flags.png,  
       phoneCode:
         country.idd?.root + 
-        (country.idd?.suffixes ? country.idd.suffixes[0] : ""), // كود الهاتف
+        (country.idd?.suffixes ? country.idd.suffixes[0] : ""),
     }));
 
     res.status(200).json({
