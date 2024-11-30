@@ -53,7 +53,7 @@ export const register = asyncHandler(async (req, res, next) => {
     password: hashPassword,
     role,
     phoneNumber,
-    companyName: role === "seller" ? companyName : null,
+    companyName,
     country
   
   });
