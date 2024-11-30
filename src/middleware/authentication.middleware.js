@@ -20,7 +20,9 @@ export const isAuthenticated = asyncHandler(async (req, res, next) => {
     return next(new Error("Token expired!"));
   }
 
-  const user = await userModel.findOne({ email: decode.email });
+  const user = await userModel.findOne({
+    $or: [{ email: decode.email }, { username: decode.userName }],
+  });
 
   if (!user) {
     return next(new Error("user not found!"));

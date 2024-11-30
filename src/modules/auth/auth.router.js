@@ -47,6 +47,7 @@ router.post("/login", isValidation(Validators.login), userController.login);
 
 router.patch(
   "/forgetCode",
+  isAuthenticated,
   isValidation(Validators.forgetCode),
   userController.sendForgetCode
 );
@@ -55,6 +56,7 @@ router.patch("/resendCode", isAuthenticated, userController.resendCode);
 
 router.patch(
   "/resetPassword",
+  isAuthenticated,
   isValidation(Validators.resetPassword),
   userController.resetPasswordByCode
 );
@@ -65,12 +67,6 @@ router.patch(
   userController.VerifyCode
 );
 
-router.post(
-  "/verifyFingerprint",
-  isAuthenticated,
-  userController.verifyFingerprintAPI
-);
-router.post("/verifyFaceAPI", isAuthenticated, userController.verifyFaceAPI);
-router.get("/allCountryWithFlag", userController.allCountryWithFlag);
+
 
 export default router;

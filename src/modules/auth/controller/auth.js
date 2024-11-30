@@ -12,19 +12,16 @@ import cloudinary from "../../../utils/cloud.js";
 import { countries } from "countries-list";
 
 export const register = asyncHandler(async (req, res, next) => {
-  const {
-    userName,
-    email,
-    password,
-    role,
-    phoneNumber,
-    companyName,
-    country,
-  } = req.body;
+  const { userName, email, password, role, phoneNumber, companyName, country } =
+    req.body;
 
-  const isUser = await userModel.findOne({ email });
+  const isUser = await userModel.findOne({
+    $or: [{ email: email }, { userName: userName }],
+  });
   if (isUser) {
-    return next(new Error("Email is already registered!", { cause: 409 }));
+    return next(
+      new Error("Email Or userName is already registered!", { cause: 409 })
+    );
   }
 
   if (!["buyer", "seller"].includes(role)) {
@@ -32,14 +29,11 @@ export const register = asyncHandler(async (req, res, next) => {
   }
 
   if (role === "seller") {
-  
     if (!companyName) {
       return next(
         new Error("Company name is required for sellers!", { cause: 400 })
       );
     }
-   
-    
   }
 
   const hashPassword = bcryptjs.hashSync(
@@ -54,8 +48,7 @@ export const register = asyncHandler(async (req, res, next) => {
     role,
     phoneNumber,
     companyName,
-    country
-  
+    country,
   });
 
   // if (role === "seller" && req.file) {
@@ -69,24 +62,29 @@ export const register = asyncHandler(async (req, res, next) => {
   //   await user.save();
   // }
 
-  const code = crypto.randomInt(1000, 9999).toString();
-  user.forgetCode = code;
-  await user.save();
+  // const code = crypto.randomInt(1000, 9999).toString();
+  // user.forgetCode = code;
+  // await user.save();
 
-  const isSent = await sendEmail({
-    to: email,
-    subject: "Verify Account",
-    html: resetPassword(code),
-  });
+  // const isSent = await sendEmail({
+  //   to: email,
+  //   subject: "Verify Account",
+  //   html: resetPassword(code),
+  // });
 
-  if (!isSent) {
-    return next(
-      new Error("Failed to send verification email!", { cause: 500 })
-    );
-  }
+  // if (!isSent) {
+  //   return next(
+  //     new Error("Failed to send verification email!", { cause: 500 })
+  //   );
+  // }
 
   const token = jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
+    {
+      id: user._id,
+      email: user.email,
+      userName: user.userName,
+      role: user.role,
+    },
     process.env.TOKEN_KEY
   );
 
@@ -100,6 +98,7 @@ export const register = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Registration successful!",
     data: {
+      email,
       userName,
       role,
       token,
@@ -108,21 +107,25 @@ export const register = asyncHandler(async (req, res, next) => {
 });
 
 export const login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, userName } = req.body;
 
-  const user = await userModel.findOne({ email });
+  const user = await userModel.findOne({
+    $or: [{ email: email }, { userName: userName }],
+  });
 
   if (!user) {
-    return next(new Error("Invalid Email. Please try again.", { cause: 400 }));
-  }
-
-  if (!user.isConfirmed) {
     return next(
-      new Error("Account is not activated. Please verify your email.", {
-        cause: 400,
-      })
+      new Error("Invalid Email Or userName . Please try again.", { cause: 400 })
     );
   }
+
+  // if (!user.isConfirmed) {
+  //   return next(
+  //     new Error("Account is not activated. Please verify your email.", {
+  //       cause: 400,
+  //     })
+  //   );
+  // }
 
   const isPasswordValid = bcryptjs.compareSync(password, user.password);
   if (!isPasswordValid) {
@@ -132,7 +135,7 @@ export const login = asyncHandler(async (req, res, next) => {
   }
 
   const token = jwt.sign(
-    { id: user._id, email: user.email, role: user.role },
+    { id: user._id, email: user.email, userName: userName, role: user.role },
     process.env.TOKEN_KEY
   );
 
@@ -149,6 +152,7 @@ export const login = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Login successful.",
     data: {
+      email: user.email,
       userName: user.userName,
       role: user.role,
       token,
@@ -159,19 +163,19 @@ export const login = asyncHandler(async (req, res, next) => {
 //send forget Code
 
 export const sendForgetCode = asyncHandler(async (req, res, next) => {
-  const user = await userModel.findOne({ email: req.body.email });
+  // const user = await userModel.findOne({ email: req.body.email });
 
-  if (!user) {
-    return next(new Error("Invalid email!", { cause: 400 }));
-  }
+  // if (!user) {
+  //   return next(new Error("Invalid email!", { cause: 400 }));
+  // }
 
   const code = crypto.randomInt(1000, 9999).toString();
 
-  user.forgetCode = code;
+  req.user.forgetCode = code;
   await user.save();
 
   return (await sendEmail({
-    to: user.email,
+    to: req.body.email,
     subject: "Reset Password",
     html: resetPassword(code),
   }))
@@ -180,18 +184,13 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
 });
 
 export const resendCode = asyncHandler(async (req, res, next) => {
-  const user = await userModel.findOne({ email: req.user.email });
-  if (!user) {
-    return next(new Error("Invalid email!", { cause: 400 }));
-  }
-
   const code = crypto.randomInt(1000, 9999).toString();
 
-  user.forgetCode = code;
+  req.user.forgetCode = code;
   await user.save();
 
   return (await sendEmail({
-    to: user.email,
+    to: req.body.email,
     subject: "Verify Account",
     html: resetPassword(code),
   }))
@@ -200,31 +199,24 @@ export const resendCode = asyncHandler(async (req, res, next) => {
 });
 
 export const VerifyCode = asyncHandler(async (req, res, next) => {
-  const user = await userModel.findOne({ email: req.user.email });
-
-  if (!user.forgetCode) {
+  if (!req.user.forgetCode) {
     return next(new Error("Please resend the forget code.", { status: 400 }));
   }
 
-  if (user.forgetCode !== req.body.forgetCode) {
+  if (req.user.forgetCode !== req.body.forgetCode) {
     return next(new Error("Invalid code!", { status: 400 }));
   }
 
-  const updateData = { $unset: { forgetCode: 1 } };
-  let message = "Go to reset new password";
-
-  if (!user.isConfirmed) {
-    user.isConfirmed = true;
-    await user.save();
-    message = "Account successfully verified";
-  }
-
-  await userModel.updateOne({ email: req.user.email }, updateData);
-
+  await userModel.updateOne(
+    {
+      $or: [{ email: req.user.email }, { username: req.user.userNme }],
+    },
+    { $unset: { forgetCode: 1 } }
+  );
   return res.status(200).json({
     success: true,
     status: 200,
-    data: { message },
+    data: { message: "Go to reset new password" },
   });
 });
 
@@ -233,68 +225,24 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
     req.body.password,
     +process.env.SALT_ROUND
   );
-  const checkUser = await userModel.findOne({ email: req.body.email });
-  if (!checkUser) {
-    return next(new Error("Invalid email!", { cause: 400 }));
-  }
-  if (checkUser.forgetCode !== req.body.forgetCode) {
-    return next(new Error("Invalid code!", { status: 400 }));
-  }
-  const user = await userModel.findOneAndUpdate(
-    { email: req.body.email },
-    { password: newPassword, $unset: { forgetCode: 1 } }
+  await userModel.findOneAndUpdate(
+    {
+      $or: [{ email: req.user.email }, { username: req.user.userName }],
+    },
+    { password: newPassword }
   );
 
   //invalidate tokens
-  const tokens = await tokenModel.find({ user: user._id });
+  const tokens = await tokenModel.find({ user: req.user._id });
 
   tokens.forEach(async (token) => {
     token.isValid = false;
     await token.save();
   });
-
-  return res.status(200).json({ success: true, message: "Try to login!" });
+  return res
+    .status(200)
+    .json({ success: true, status: 200, message: "Try to login!" });
 });
-
-export const verifyFingerprintAPI = asyncHandler(
-  asyncHandler(async (req, res, next) => {
-    const { fingerprint } = req.body;
-    const user = await userModel.findOne({ email: req.user.email });
-
-    if (!user) {
-      return next(new Error("User not found!", { cause: 404 }));
-    }
-
-    if (!(user.fingerprint === fingerprint)) {
-      return next(
-        new Error("Fingerprint verification failed!", { cause: 400 })
-      );
-    }
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Fingerprint verified successfully!" });
-  })
-);
-
-export const verifyFaceAPI = asyncHandler(
-  asyncHandler(async (req, res, next) => {
-    const { faceData } = req.body;
-    const user = await userModel.findOne({ email: req.user.email });
-
-    if (!user) {
-      return next(new Error("User not found!", { cause: 404 }));
-    }
-
-    if (!(user.faceData === faceData)) {
-      return next(new Error("Face verification failed!", { cause: 400 }));
-    }
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Face verified successfully!" });
-  })
-);
 
 export const allCountryWithFlag = asyncHandler((req, res) => {
   const countriesData = Object.keys(countries).map((code) => ({

@@ -6,7 +6,8 @@ const userSchema = new Schema(
 
     userName: {
       type: String,
-      required: true,
+      unique: true,
+
       min: 3,
       max: 20,
     },
@@ -28,7 +29,6 @@ const userSchema = new Schema(
     email: {
       type: String,
       unique: true,
-      required: true,
       lowercase: true,
     },
     password: {
@@ -49,10 +49,7 @@ const userSchema = new Schema(
       default: "buyer",
     },
     wishlist: [Types.ObjectId],
-    isConfirmed: {
-      type: Boolean,
-      default: false,
-    },
+
     forgetCode: String,
     activationCode: String,
     profileImage: {
