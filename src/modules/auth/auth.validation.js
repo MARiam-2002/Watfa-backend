@@ -35,7 +35,6 @@ export const registerSchema = joi
 
     phoneNumber: joi
       .string()
-      .pattern(/^((\+966|0)?5\d{8})$/)
       .when("role", {
         is: "seller",
         then: joi
