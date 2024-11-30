@@ -20,8 +20,6 @@ export const register = asyncHandler(async (req, res, next) => {
     phoneNumber,
     companyName,
     country,
-    fingerprint,
-    faceData,
   } = req.body;
 
   const isUser = await userModel.findOne({ email });
@@ -34,26 +32,14 @@ export const register = asyncHandler(async (req, res, next) => {
   }
 
   if (role === "seller") {
-    if (!phoneNumber) {
-      return next(
-        new Error("Phone number is required for sellers!", { cause: 400 })
-      );
-    }
-    if (!req.file) {
-      return next(
-        new Error("Document is required for sellers!", { cause: 400 })
-      );
-    }
+  
     if (!companyName) {
       return next(
         new Error("Company name is required for sellers!", { cause: 400 })
       );
     }
-    if (!country) {
-      return next(
-        new Error("Country is required for sellers!", { cause: 400 })
-      );
-    }
+   
+    
   }
 
   const hashPassword = bcryptjs.hashSync(
@@ -66,23 +52,22 @@ export const register = asyncHandler(async (req, res, next) => {
     email,
     password: hashPassword,
     role,
-    phoneNumber: role === "seller" ? phoneNumber : null,
+    phoneNumber,
     companyName: role === "seller" ? companyName : null,
-    country: role === "seller" ? country : null,
-    fingerprint: fingerprint || null,
-    faceData: faceData || null,
+    country
+  
   });
 
-  if (role === "seller" && req.file) {
-    const { secure_url, public_id } = await cloudinary.uploader.upload(
-      req.file.path,
-      {
-        folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}`,
-      }
-    );
-    user.document = { url: secure_url, id: public_id };
-    await user.save();
-  }
+  // if (role === "seller" && req.file) {
+  //   const { secure_url, public_id } = await cloudinary.uploader.upload(
+  //     req.file.path,
+  //     {
+  //       folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}`,
+  //     }
+  //   );
+  //   user.document = { url: secure_url, id: public_id };
+  //   await user.save();
+  // }
 
   const code = crypto.randomInt(1000, 9999).toString();
   user.forgetCode = code;
