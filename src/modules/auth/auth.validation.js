@@ -60,6 +60,15 @@ export const registerSchema = joi
         "string.pattern.base":
           "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
       }),
+    confirmPassword: joi
+      .string()
+      .valid(joi.ref("password"))
+      .required()
+      .label("Confirm Password")
+      .messages({
+        ...defaultMessages,
+        "any.only": "Confirm Password must match the New Password.",
+      }),
 
     country: joi.string().required().label("Country").messages(defaultMessages),
   })
