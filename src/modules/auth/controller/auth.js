@@ -183,8 +183,6 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
     : next(new Error("Something went wrong!", { cause: 400 }));
 });
 
-
-
 export const VerifyCode = asyncHandler(async (req, res, next) => {
   if (!req.user.forgetCode) {
     return next(new Error("Please resend the forget code.", { status: 400 }));
@@ -202,7 +200,6 @@ export const VerifyCode = asyncHandler(async (req, res, next) => {
   );
   return res.status(200).json({
     success: true,
-    status: 200,
     data: { message: "Go to reset new password" },
   });
 });
@@ -226,9 +223,7 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
     token.isValid = false;
     await token.save();
   });
-  return res
-    .status(200)
-    .json({ success: true, status: 200, message: "Try to login!" });
+  return res.status(200).json({ success: true, message: "Try to login!" });
 });
 
 export const allCountryWithFlag = asyncHandler((req, res) => {
@@ -239,5 +234,9 @@ export const allCountryWithFlag = asyncHandler((req, res) => {
     flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
   }));
 
-  res.json(countriesData);
+  res.json({
+    success: true,
+    message: "Countries with flags",
+    data: { countries: countriesData },
+  });
 });
