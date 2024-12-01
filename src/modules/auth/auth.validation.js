@@ -76,13 +76,19 @@ export const registerSchema = joi
 
 export const login = joi
   .object({
-    email: joi
+    email: joi.string().email().label("Email").messages(defaultMessages),
+    userName: joi
       .string()
-      .email()
-      .required()
-      .label("Email")
-      .messages(defaultMessages),
-
+      .regex(/^[a-zA-Z0-9._]+$/)
+      .trim()
+      .min(5)
+      .max(15)
+      .label("Username")
+      .messages({
+        ...defaultMessages,
+        "string.pattern.base":
+          "Username can only contain alphanumeric characters, periods, and underscores.",
+      }),
     password: joi
       .string()
       .required()
@@ -104,25 +110,14 @@ export const forgetCode = joi
 
 export const resetPassword = joi
   .object({
-    email: joi
-      .string()
-      .email()
-      .required()
-      .label("Email")
-      .messages(defaultMessages),
-
+   
     password: joi
       .string()
       .required()
       .label("New Password")
       .messages(defaultMessages),
 
-    forgetCode: joi
-      .string()
-      .required()
-      .label("Forget Code")
-      .messages(defaultMessages),
-
+  
     confirmPassword: joi
       .string()
       .valid(joi.ref("password"))
