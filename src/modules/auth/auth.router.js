@@ -66,6 +66,10 @@ router.patch(
   userController.VerifyCode
 );
 
+router.get(
+  "/allCountryWithFlag",
+  userController.allCountryWithFlag
+)
 
 
 export default router;
