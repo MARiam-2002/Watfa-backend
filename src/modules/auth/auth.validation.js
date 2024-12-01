@@ -110,14 +110,17 @@ export const forgetCode = joi
 
 export const resetPassword = joi
   .object({
-   
     password: joi
       .string()
+      .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/)
       .required()
-      .label("New Password")
-      .messages(defaultMessages),
+      .label("Password")
+      .messages({
+        ...defaultMessages,
+        "string.pattern.base":
+          "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+      }),
 
-  
     confirmPassword: joi
       .string()
       .valid(joi.ref("password"))
