@@ -172,7 +172,7 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
   const code = crypto.randomInt(1000, 9999).toString();
 
   req.user.forgetCode = code;
-  await user.save();
+  await req.user.save();
 
   return (await sendEmail({
     to: req.body.email,
@@ -187,7 +187,7 @@ export const resendCode = asyncHandler(async (req, res, next) => {
   const code = crypto.randomInt(1000, 9999).toString();
 
   req.user.forgetCode = code;
-  await user.save();
+  await req.user.save();
 
   return (await sendEmail({
     to: req.body.email,
