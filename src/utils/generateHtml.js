@@ -281,7 +281,7 @@ export const resetPassword = (code) => `<!DOCTYPE html>
                                                             href="#"
                                                             style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #FFFFFF ; text-decoration: none; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #E071C0; display: inline-block;"
                                                         >
-                                                            123456
+                                                            ${code}
                                                         </div>
 
                                                     </td>
