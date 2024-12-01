@@ -183,20 +183,7 @@ export const sendForgetCode = asyncHandler(async (req, res, next) => {
     : next(new Error("Something went wrong!", { cause: 400 }));
 });
 
-export const resendCode = asyncHandler(async (req, res, next) => {
-  const code = crypto.randomInt(1000, 9999).toString();
 
-  req.user.forgetCode = code;
-  await req.user.save();
-
-  return (await sendEmail({
-    to: req.body.email,
-    subject: "Verify Account",
-    html: resetPassword(code),
-  }))
-    ? res.status(200).json({ success: true, message: "check you email!" })
-    : next(new Error("Something went wrong!", { cause: 400 }));
-});
 
 export const VerifyCode = asyncHandler(async (req, res, next) => {
   if (!req.user.forgetCode) {

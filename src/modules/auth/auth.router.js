@@ -52,7 +52,6 @@ router.patch(
   userController.sendForgetCode
 );
 
-router.patch("/resendCode", isAuthenticated, userController.resendCode);
 
 router.patch(
   "/resetPassword",
