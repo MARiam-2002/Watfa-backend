@@ -200,7 +200,7 @@ export const VerifyCode = asyncHandler(async (req, res, next) => {
   );
   return res.status(200).json({
     success: true,
-    data: { message: "Go to reset new password" },
+    message: "Go to reset new password",
   });
 });
 
