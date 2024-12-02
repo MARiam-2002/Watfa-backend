@@ -14,6 +14,7 @@ dotenv.config();
 import passport from "passport";
 import '../config/passport.sttup.js'; // استيراد إعدادات Passport
 import session from "express-session";
+import  jwt from "jsonwebtoken";
 
 
 export const bootstrap = (app, express) => {
