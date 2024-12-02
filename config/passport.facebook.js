@@ -13,7 +13,7 @@ passport.use(
       callbackURL: "https://watfa-backend.vercel.app/auth/facebook/callback",
       profileFields: ["id", "displayName", "email", "photos"],
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (req,accessToken, refreshToken, profile, done) => {
       try {
         const role = req.session.role || "buyer";
 
