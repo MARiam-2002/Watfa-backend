@@ -14,6 +14,9 @@ passport.use(new GoogleStrategy(
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
+      // استرداد الدور (role) من الجلسة
+      const role = req.session.role || 'buyer';
+
       // البحث عن المستخدم باستخدام الـ googleId
       let user = await userModel.findOne({ googleId: profile.id });
 
@@ -23,7 +26,7 @@ passport.use(new GoogleStrategy(
           googleId: profile.id,
           userName: profile.displayName,
           email: profile.emails[0].value,
-          role: "buyer", // تعيين الدور الذي تم إرساله من الـ Frontend
+          role, // استخدام الدور الذي تم تمريره
         });
 
         await user.save();

@@ -64,10 +64,14 @@ export const bootstrap = (app, express) => {
   // مسار التوجيه إلى Google OAuth
   app.get(
     "/auth/google",
+    (req, res, next) => {
+      const role = req.query.role || "buyer"; // افتراض دور "buyer" إذا لم يتم تحديده
+      req.session.role = role; // تخزين الدور في الجلسة
+      next();
+    },
     passport.authenticate("google", { scope: ["profile", "email"] })
   );
 
-  // الرد بعد تسجيل الدخول باستخدام Google OAuth
   app.get(
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login" }),
@@ -77,7 +81,7 @@ export const bootstrap = (app, express) => {
           id: req.user._id,
           email: req.user.email,
           userName: req.user.userName,
-          role: req.user.role,
+          role: req.session.role || 'buyer',
         },
         process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
         { expiresIn: "1h" }
