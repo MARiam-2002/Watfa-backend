@@ -12,10 +12,9 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
-import '../config/passport.sttup.js'; // استيراد إعدادات Passport
+import "../config/passport.sttup.js"; // استيراد إعدادات Passport
 import session from "express-session";
-import  jwt from "jsonwebtoken";
-
+import jwt from "jsonwebtoken";
 
 export const bootstrap = (app, express) => {
   if (process.env.NODE_ENV == "dev") {
@@ -50,24 +49,28 @@ export const bootstrap = (app, express) => {
   app.use(cors());
   app.use(express.json());
 
-  app.use(session({
-    secret: process.env.SESSION_SECRET, // تأكد من أنك وضعت السر الخاص بالجسة في ملف .env
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } // تأكد من تعيين secure إلى true في بيئة الإنتاج باستخدام HTTPS
-  }));
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET, // تأكد من أنك وضعت السر الخاص بالجسة في ملف .env
+      resave: false,
+      saveUninitialized: true,
+      cookie: { secure: false }, // تأكد من تعيين secure إلى true في بيئة الإنتاج باستخدام HTTPS
+    })
+  );
 
   app.use(passport.initialize());
   app.use(passport.session()); // تفعيل الجلسات مع Passport
 
   // مسار التوجيه إلى Google OAuth
-  app.get('/auth/google', 
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+  app.get(
+    "/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
   );
-  
+
   // الرد بعد تسجيل الدخول باستخدام Google OAuth
-  app.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login' }),
+  app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login" }),
     (req, res) => {
       const token = jwt.sign(
         {
@@ -77,16 +80,22 @@ export const bootstrap = (app, express) => {
           role: req.user.role,
         },
         process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
-        { expiresIn: '1h' }
+        { expiresIn: "1h" }
       );
-  
+
       // إرجاع الـ user مع الـ token
-      res.send({ user: req.user, token });
+      return res.status(201).json({
+        success: true,
+        message: "login google successful",
+        data: {
+          email: req.user.email,
+          userName: req.user.userName,
+          role: req.user.role,
+          token,
+        },
+      });
     }
   );
-  
-
-
 
   app.use("/auth", authRouter);
   app.use("/category", categoryRouter);
