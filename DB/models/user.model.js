@@ -26,6 +26,7 @@ const userSchema = new Schema(
     fingerprint: { type: String },
     faceData: { type: String },
     googleId: String,
+    facebookId: String,
     email: {
       type: String,
       unique: true,
