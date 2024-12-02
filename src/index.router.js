@@ -12,7 +12,6 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
-import "../config/passport.sttup.js"; // استيراد إعدادات Passport
 import session from "express-session";
 import jwt from "jsonwebtoken";
 
@@ -61,45 +60,6 @@ export const bootstrap = (app, express) => {
   app.use(passport.initialize());
   app.use(passport.session()); // تفعيل الجلسات مع Passport
 
-  // مسار التوجيه إلى Google OAuth
-  app.get(
-    "/auth/google",
-    (req, res, next) => {
-      const role = req.query.role || "buyer"; // افتراض دور "buyer" إذا لم يتم تحديده
-      req.session.role = role; // تخزين الدور في الجلسة
-      next();
-    },
-    passport.authenticate("google", { scope: ["profile", "email"] })
-  );
-
-  app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login" }),
-    (req, res) => {
-      const token = jwt.sign(
-        {
-          id: req.user._id,
-          email: req.user.email,
-          userName: req.user.userName,
-          role: req.session.role || 'buyer',
-        },
-        process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
-        { expiresIn: "1h" }
-      );
-
-      // إرجاع الـ user مع الـ token
-      return res.status(201).json({
-        success: true,
-        message: "login google successful",
-        data: {
-          email: req.user.email,
-          userName: req.user.userName,
-          role: req.user.role,
-          token,
-        },
-      });
-    }
-  );
 
   app.use("/auth", authRouter);
   app.use("/category", categoryRouter);

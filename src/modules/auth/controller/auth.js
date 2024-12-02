@@ -224,7 +224,8 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
   return res.status(200).json({ success: true, message: "Try to login!" });
 });
 
-export const allCountryWithFlag = asyncHandler((req, res) => {
+export const allCountryWithFlag = asyncHandler((req, res,next) => {
+  console.log("allCountryWithFlag");
   const countriesData = Object.keys(countries).map((code) => ({
     name: countries[code].name,
     code: code,
@@ -232,9 +233,12 @@ export const allCountryWithFlag = asyncHandler((req, res) => {
     flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
   }));
 
-  res.json({
+  console.log(countriesData);
+  return res.json({
     success: true,
     message: "Countries with flags",
-    data:  countriesData ,
+    data: countriesData,
   });
+
+  
 });
