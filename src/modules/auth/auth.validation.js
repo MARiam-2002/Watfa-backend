@@ -13,17 +13,16 @@ const defaultMessages = {
 
 export const registerSchema = joi
   .object({
-    userName: joi
+    userNameOrEmail: joi
       .string()
-      .regex(/^[a-zA-Z0-9._]+$/)
+      .regex(/^[a-zA-Z0-9._]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       .trim()
-      .min(5)
-      .max(15)
-      .label("Username")
+      .required()
+      .label("Username or Email")
       .messages({
         ...defaultMessages,
         "string.pattern.base":
-          "Username can only contain alphanumeric characters, periods, and underscores.",
+          "Username can only contain alphanumeric characters, periods, underscores, or must be a valid email.",
       }),
 
     role: joi
@@ -46,9 +45,7 @@ export const registerSchema = joi
               "Phone number must be a valid Saudi number starting with +966 or 05 and contain 9 digits.",
           }),
       })
-      .required(),
-
-    email: joi.string().email().label("Email").messages(defaultMessages),
+      .messages(defaultMessages),
 
     password: joi
       .string()
@@ -60,6 +57,7 @@ export const registerSchema = joi
         "string.pattern.base":
           "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
       }),
+
     confirmPassword: joi
       .string()
       .valid(joi.ref("password"))
@@ -74,21 +72,20 @@ export const registerSchema = joi
   })
   .required();
 
-export const login = joi
+export const loginSchema = joi
   .object({
-    email: joi.string().email().label("Email").messages(defaultMessages),
-    userName: joi
+    userNameOrEmail: joi
       .string()
-      .regex(/^[a-zA-Z0-9._]+$/)
+      .regex(/^[a-zA-Z0-9._]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       .trim()
-      .min(5)
-      .max(15)
-      .label("Username")
+      .required()
+      .label("Username or Email")
       .messages({
         ...defaultMessages,
         "string.pattern.base":
-          "Username can only contain alphanumeric characters, periods, and underscores.",
+          "Username can only contain alphanumeric characters, periods, underscores, or must be a valid email.",
       }),
+
     password: joi
       .string()
       .required()
@@ -96,6 +93,7 @@ export const login = joi
       .messages(defaultMessages),
   })
   .required();
+
 
 export const forgetCode = joi
   .object({

@@ -12,28 +12,45 @@ import cloudinary from "../../../utils/cloud.js";
 import { countries } from "countries-list";
 
 export const register = asyncHandler(async (req, res, next) => {
-  const { userName, email, password, role, phoneNumber, companyName, country } =
-    req.body;
+  const {
+    userNameOrEmail,
+    password,
+    confirmPassword,
+    phoneNumber,
+    role,
+    companyName,
+    country,
+  } = req.body;
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const isEmail = emailRegex.test(userNameOrEmail);
 
   const isUser = await userModel.findOne({
-    $or: [{ email: email }, { userName: userName }],
+    $or: [
+      { email: isEmail ? userNameOrEmail : null },
+      { userName: !isEmail ? userNameOrEmail : null },
+    ],
   });
+
   if (isUser) {
     return next(
-      new Error("Email Or userName is already registered!", { cause: 409 })
+      new Error("Email or Username is already registered!", { cause: 409 })
     );
+  }
+
+  if (password !== confirmPassword) {
+    return next(new Error("Passwords do not match!", { cause: 400 }));
   }
 
   if (!["buyer", "seller"].includes(role)) {
     return next(new Error("Invalid role provided!", { cause: 400 }));
   }
 
-  if (role === "seller") {
-    if (!companyName) {
-      return next(
-        new Error("Company name is required for sellers!", { cause: 400 })
-      );
-    }
+  if (role === "seller" && !companyName) {
+    return next(
+      new Error("Company name is required for sellers!", { cause: 400 })
+    );
   }
 
   const hashPassword = bcryptjs.hashSync(
@@ -42,41 +59,14 @@ export const register = asyncHandler(async (req, res, next) => {
   );
 
   const user = await userModel.create({
-    userName,
-    email,
+    userName: isEmail ? null : userNameOrEmail,
+    email: isEmail ? userNameOrEmail : null,
     password: hashPassword,
-    role,
     phoneNumber,
+    role,
     companyName,
     country,
   });
-
-  // if (role === "seller" && req.file) {
-  //   const { secure_url, public_id } = await cloudinary.uploader.upload(
-  //     req.file.path,
-  //     {
-  //       folder: `${process.env.FOLDER_CLOUDINARY}/sellers/${user._id}`,
-  //     }
-  //   );
-  //   user.document = { url: secure_url, id: public_id };
-  //   await user.save();
-  // }
-
-  // const code = crypto.randomInt(1000, 9999).toString();
-  // user.forgetCode = code;
-  // await user.save();
-
-  // const isSent = await sendEmail({
-  //   to: email,
-  //   subject: "Verify Account",
-  //   html: resetPassword(code),
-  // });
-
-  // if (!isSent) {
-  //   return next(
-  //     new Error("Failed to send verification email!", { cause: 500 })
-  //   );
-  // }
 
   const token = jwt.sign(
     {
@@ -98,8 +88,8 @@ export const register = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Registration successful!",
     data: {
-      email,
-      userName,
+      email: user.email,
+      userName: user.userName,
       role,
       token,
     },
@@ -107,26 +97,28 @@ export const register = asyncHandler(async (req, res, next) => {
 });
 
 export const login = asyncHandler(async (req, res, next) => {
-  const { email, password, userName } = req.body;
+  const { userNameOrEmail, password } = req.body;
 
+  // Regular Expression to validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const isEmail = emailRegex.test(userNameOrEmail);
+
+  // البحث عن المستخدم باستخدام البريد الإلكتروني أو اسم المستخدم
   const user = await userModel.findOne({
-    $or: [{ email: email }, { userName: userName }],
+    $or: [
+      { email: isEmail ? userNameOrEmail : null },
+      { userName: !isEmail ? userNameOrEmail : null },
+    ],
   });
 
   if (!user) {
     return next(
-      new Error("Invalid Email Or userName . Please try again.", { cause: 400 })
+      new Error("Invalid Username or Email. Please try again.", { cause: 400 })
     );
   }
 
-  // if (!user.isConfirmed) {
-  //   return next(
-  //     new Error("Account is not activated. Please verify your email.", {
-  //       cause: 400,
-  //     })
-  //   );
-  // }
-
+  // التحقق من كلمة المرور
   const isPasswordValid = bcryptjs.compareSync(password, user.password);
   if (!isPasswordValid) {
     return next(
@@ -134,17 +126,25 @@ export const login = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // إنشاء التوكن
   const token = jwt.sign(
-    { id: user._id, email: user.email, userName: userName, role: user.role },
+    {
+      id: user._id,
+      email: user.email,
+      userName: user.userName,
+      role: user.role,
+    },
     process.env.TOKEN_KEY
   );
 
+  // تسجيل التوكن في قاعدة البيانات
   await tokenModel.create({
     token,
     user: user._id,
     agent: req.headers["user-agent"] || "unknown",
   });
 
+  // تحديث حالة المستخدم
   user.status = "online";
   await user.save();
 
@@ -159,6 +159,7 @@ export const login = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
 
 //send forget Code
 
@@ -211,7 +212,7 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
   );
   await userModel.findOneAndUpdate(
     {
-      $or: [{ email: req.user.email }, { username: req.user.userName }],
+      _id:req.user._id
     },
     { password: newPassword }
   );
