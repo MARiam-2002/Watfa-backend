@@ -44,12 +44,13 @@ router.get("/allCountryWithFlag", userController.allCountryWithFlag);
 router.get(
   "/facebook",
   (req, res, next) => {
-    const role = req.query.role || "buyer";
-    req.session.role = role;
+    const role = req.query.role || "buyer"; // تعيين دور افتراضي
+    req.session.role = role; // تخزين الدور في الجلسة
     next();
   },
   passport.authenticate("facebook", { scope: ["email", "public_profile"] }) // تحديد الأذونات المطلوبة
 );
+
 
 router.get(
   "/facebook/callback",

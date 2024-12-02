@@ -13,7 +13,7 @@ passport.use(
       callbackURL: "https://watfa-backend.vercel.app/auth/facebook/callback",
       profileFields: ["id", "displayName", "email", "photos"],
     },
-    async (req,accessToken, refreshToken, profile, done) => {
+    async (req, accessToken, refreshToken, profile, done) => {
       try {
         const role = req.session.role || "buyer";
 
@@ -22,8 +22,8 @@ passport.use(
           user = new userModel({
             facebookId: profile.id,
             userName: profile.displayName,
-            email: profile.emails[0].value,
-            profilePicture: profile.photos[0].value,
+            email: profile.emails?.[0]?.value || "", // استخدام قيمة فارغة إذا لم تكن متوفرة
+            profileImage: { url: profile.photos?.[0]?.value || "" }, // استخدام قيمة فارغة إذا لم تكن متوفرة
             role: role,
           });
           await user.save();
