@@ -23,7 +23,7 @@ passport.use(new GoogleStrategy(
           googleId: profile.id,
           userName: profile.displayName,
           email: profile.emails[0].value,
-          role: "bayer", // تعيين الدور الذي تم إرساله من الـ Frontend
+          role: "buyer", // تعيين الدور الذي تم إرساله من الـ Frontend
         });
 
         await user.save();
