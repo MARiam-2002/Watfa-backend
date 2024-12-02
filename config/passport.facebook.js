@@ -18,7 +18,15 @@ passport.use(
       try {
         const role = req.session.role || "buyer";
 
-        let user = await userModel.findOne({ facebookId: profile.id });
+        let user = await userModel.findOne({
+          $or: [
+            { facebookId: profile.id },
+            { email: profile.emails?.[0]?.value },
+            {
+              userName: profile.displayName,
+            },
+          ],
+        });
         if (!user) {
           user = new userModel({
             facebookId: profile.id,
