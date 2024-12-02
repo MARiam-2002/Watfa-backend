@@ -1,41 +1,60 @@
-import passport from "passport";
-import GoogleStrategy from "passport-google-oauth20";
-import dotenv from "dotenv";
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import jwt from 'jsonwebtoken';
+import userModel from '../DB/models/user.model.js';
+import dotenv from 'dotenv';
 dotenv.config();
-import userModel from "../DB/models/user.model.js";
+
+// تعريف استراتيجية Google OAuth مع Passport
+passport.use(new GoogleStrategy(
+  {
+    clientID: process.env.CLIENTID, // Client ID من Google
+    clientSecret: process.env.CLIENTSECRET, // Client Secret من Google
+    callbackURL: 'https://watfa-backend.vercel.app/auth/google/callback', // الرابط الذي سيتم إعادة توجيه المستخدمين إليه بعد تسجيل الدخول
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      // البحث عن المستخدم باستخدام الـ googleId
+      let user = await userModel.findOne({ googleId: profile.id });
+
+      if (!user) {
+        // إذا كان المستخدم غير موجود، يتم إنشاؤه
+        user = new userModel({
+          googleId: profile.id,
+          userName: profile.displayName,
+          email: profile.emails[0].value,
+          role: "bayer", // تعيين الدور الذي تم إرساله من الـ Frontend
+        });
+
+        await user.save();
+      }
+
+      // بعد العثور على أو إنشاء المستخدم، يتم توليد التوكن JWT
+      const token = jwt.sign(
+        {
+          id: user._id,
+          email: user.email,
+          userName: user.userName,
+          role: user.role,
+        },
+        process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
+        { expiresIn: '1h' } // تحديد مدة صلاحية التوكن
+      );
+
+      // إرجاع المستخدم مع التوكن
+      done(null, { user, token });
+    } catch (error) {
+      done(error); // في حالة حدوث خطأ
+    }
+  }
+));
+
+// حفظ البيانات داخل الجلسة (إذا لزم الأمر)
 passport.serializeUser((user, done) => {
-  done(null, user._id);
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
   const user = await userModel.findById(id);
   done(null, user);
 });
-passport.use(
-  new GoogleStrategy(
-    {
-      callbackURL: "http://backend-kappa-beige.vercel.app/auth/google/redirect",
-      clientID: process.env.CLIENTID,
-      clientSecret: process.env.CLIENTSECRET,
-      scope: ["profile", "email"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      const checkUser = await userModel.findOne({ googleId: profile.id });
-      if (checkUser) {
-        done(null, checkUser);
-      } else {
-        const user = await userModel.create({
-          userName: profile.displayName,
-          googleId: profile.id,
-          "profileImage.url": profile._json.picture,
-          email: profile._json.email,
-        });
-        done(null, user);
-      }
-    }
-  )
-);
-
-// Configure Passport for JWT
-
-export default passport;

@@ -12,8 +12,8 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
-import pass from "../config/passport.sttup.js";
-import session from "express-session";
+import '../config/passport.sttup.js'; // استيراد إعدادات Passport
+
 
 export const bootstrap = (app, express) => {
   if (process.env.NODE_ENV == "dev") {
@@ -47,11 +47,38 @@ export const bootstrap = (app, express) => {
   // });
   app.use(cors());
   app.use(express.json());
-  app.use(
-    session({ secret: "secret", resave: true, saveUninitialized: true })
-  );
+
+
   app.use(passport.initialize());
-  app.use(passport.session());
+
+  // مسار التوجيه إلى Google OAuth
+  app.get('/auth/google', 
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+  
+  // الرد بعد تسجيل الدخول باستخدام Google OAuth
+  app.get('/auth/google/callback', 
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    (req, res) => {
+      // بعد نجاح التوثيق، ننشئ توكن JWT
+      const token = jwt.sign(
+        {
+          id: req.user._id,
+          email: req.user.email,
+          userName: req.user.userName,
+          role: req.user.role,
+        },
+        process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في ملف البيئة
+        { expiresIn: '1h' } // تحديد مدة صلاحية التوكن
+      );
+  
+      // إرسال التوكن مع بيانات المستخدم
+      res.json({ user: req.user, token });
+    }
+  );
+
+
+
   app.use("/auth", authRouter);
   app.use("/category", categoryRouter);
   app.use("/subCategory", subCategoryRouter);
