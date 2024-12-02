@@ -41,20 +41,20 @@ passport.use(new GoogleStrategy(
         { expiresIn: '1h' } // تحديد مدة صلاحية التوكن
       );
 
-      // إرجاع المستخدم مع التوكن
-      done(null, { user, token });
+      // إرجاع المستخدم فقط
+      done(null, user);
     } catch (error) {
       done(error); // في حالة حدوث خطأ
     }
   }
 ));
 
-// حفظ البيانات داخل الجلسة (إذا لزم الأمر)
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  done(null, user.id); // تأكد من أن بيانات المستخدم التي تستخدمها في السيريالايز هي `user.id` أو المعرف المناسب
 });
 
 passport.deserializeUser(async (id, done) => {
   const user = await userModel.findById(id);
-  done(null, user);
+  done(null, user); // التأكد من إرجاع البيانات بشكل صحيح
 });
+

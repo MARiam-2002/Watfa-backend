@@ -50,10 +50,10 @@ export const bootstrap = (app, express) => {
   app.use(express.json());
 
   app.use(session({
-    secret: process.env.SESSION_SECRET, // يجب تحديد سر الجلسة، يجب عليك إضافته في البيئة
-    resave: false, // لا تحفظ الجلسة إذا لم يتم تعديلها
-    saveUninitialized: false, // لا تحفظ الجلسة إذا لم يتم تهيئتها
-    cookie: { secure: false } // في حالة البيئة المحلية
+    secret: process.env.SESSION_SECRET, // تأكد من أنك وضعت السر الخاص بالجسة في ملف .env
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // تأكد من تعيين secure إلى true في بيئة الإنتاج باستخدام HTTPS
   }));
 
   app.use(passport.initialize());
@@ -65,10 +65,9 @@ export const bootstrap = (app, express) => {
   );
   
   // الرد بعد تسجيل الدخول باستخدام Google OAuth
-  app.get('/auth/google/callback', 
+  app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-      // بعد نجاح التوثيق، ننشئ توكن JWT
       const token = jwt.sign(
         {
           id: req.user._id,
@@ -76,14 +75,15 @@ export const bootstrap = (app, express) => {
           userName: req.user.userName,
           role: req.user.role,
         },
-        process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في ملف البيئة
-        { expiresIn: '1h' } // تحديد مدة صلاحية التوكن
+        process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
+        { expiresIn: '1h' }
       );
   
-      // إرسال التوكن مع بيانات المستخدم
-      res.json({ user: req.user, token });
+      // إرجاع الـ user مع الـ token
+      res.send({ user: req.user, token });
     }
   );
+  
 
 
 
