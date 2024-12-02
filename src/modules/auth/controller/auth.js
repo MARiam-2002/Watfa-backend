@@ -155,7 +155,6 @@ export const login = asyncHandler(async (req, res, next) => {
   });
 });
 
-
 //send forget Code
 
 export const sendForgetCode = asyncHandler(async (req, res, next) => {
@@ -201,13 +200,16 @@ export const VerifyCode = asyncHandler(async (req, res, next) => {
 });
 
 export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
+  if (req.user.forgetCode) {
+    return next(new Error("Please verify code first!", { status: 400 }));
+  }
   const newPassword = bcryptjs.hashSync(
     req.body.password,
     +process.env.SALT_ROUND
   );
   await userModel.findOneAndUpdate(
     {
-      _id:req.user._id
+      _id: req.user._id,
     },
     { password: newPassword }
   );
