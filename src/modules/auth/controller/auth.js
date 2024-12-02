@@ -104,7 +104,6 @@ export const login = asyncHandler(async (req, res, next) => {
 
   const isEmail = emailRegex.test(userNameOrEmail);
 
-  // البحث عن المستخدم باستخدام البريد الإلكتروني أو اسم المستخدم
   const user = await userModel.findOne({
     $or: [
       { email: isEmail ? userNameOrEmail : null },
@@ -118,7 +117,6 @@ export const login = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // التحقق من كلمة المرور
   const isPasswordValid = bcryptjs.compareSync(password, user.password);
   if (!isPasswordValid) {
     return next(
@@ -126,7 +124,6 @@ export const login = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // إنشاء التوكن
   const token = jwt.sign(
     {
       id: user._id,
@@ -137,14 +134,12 @@ export const login = asyncHandler(async (req, res, next) => {
     process.env.TOKEN_KEY
   );
 
-  // تسجيل التوكن في قاعدة البيانات
   await tokenModel.create({
     token,
     user: user._id,
     agent: req.headers["user-agent"] || "unknown",
   });
 
-  // تحديث حالة المستخدم
   user.status = "online";
   await user.save();
 

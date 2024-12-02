@@ -41,7 +41,7 @@ router.post(
   userController.register
 );
 
-router.post("/login", isValidation(Validators.login), userController.login);
+router.post("/login", isValidation(Validators.loginSchema), userController.login);
 
 //send forget password
 
