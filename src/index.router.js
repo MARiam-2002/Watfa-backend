@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
 import '../config/passport.sttup.js'; // استيراد إعدادات Passport
+import session from "express-session";
 
 
 export const bootstrap = (app, express) => {
@@ -48,8 +49,15 @@ export const bootstrap = (app, express) => {
   app.use(cors());
   app.use(express.json());
 
+  app.use(session({
+    secret: process.env.SESSION_SECRET, // يجب تحديد سر الجلسة، يجب عليك إضافته في البيئة
+    resave: false, // لا تحفظ الجلسة إذا لم يتم تعديلها
+    saveUninitialized: false, // لا تحفظ الجلسة إذا لم يتم تهيئتها
+    cookie: { secure: false } // في حالة البيئة المحلية
+  }));
 
   app.use(passport.initialize());
+  app.use(passport.session()); // تفعيل الجلسات مع Passport
 
   // مسار التوجيه إلى Google OAuth
   app.get('/auth/google', 
