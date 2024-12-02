@@ -235,6 +235,6 @@ export const allCountryWithFlag = asyncHandler((req, res) => {
   res.json({
     success: true,
     message: "Countries with flags",
-    data: { countries: countriesData },
+    data:  countriesData ,
   });
 });
