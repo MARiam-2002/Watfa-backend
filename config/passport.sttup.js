@@ -10,6 +10,8 @@ passport.use(new GoogleStrategy(
     clientID: process.env.CLIENTID, 
     clientSecret: process.env.CLIENTSECRET, 
     callbackURL: 'https://watfa-backend.vercel.app/auth/google/callback',  
+    passReqToCallback: true, // يتيح تمرير req إلى الوظيفة
+
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
