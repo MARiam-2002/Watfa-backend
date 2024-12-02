@@ -12,6 +12,7 @@ passport.use(
       clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL: "https://watfa-backend.vercel.app/auth/facebook/callback",
       profileFields: ["id", "displayName", "email", "photos"],
+      passReqToCallback: true, // يتيح تمرير req إلى الوظيفة
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
