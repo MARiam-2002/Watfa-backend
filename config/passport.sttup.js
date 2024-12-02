@@ -1,21 +1,13 @@
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import jwt from 'jsonwebtoken';
-import userModel from '../DB/models/user.model.js';
-import dotenv from 'dotenv';
-dotenv.config();
-
 passport.use(new GoogleStrategy(
   {
     clientID: process.env.CLIENTID, 
     clientSecret: process.env.CLIENTSECRET, 
     callbackURL: 'https://watfa-backend.vercel.app/auth/google/callback',  
     passReqToCallback: true, // يتيح تمرير req إلى الوظيفة
-
   },
-  async (accessToken, refreshToken, profile, done) => {
+  async (req, accessToken, refreshToken, profile, done) => { // إضافة req هنا
     try {
-      const role = req.session.role || 'buyer';
+      const role = req.session.role || 'buyer'; // الآن يمكن استخدام req.session.role
 
       let user = await userModel.findOne({ googleId: profile.id });
 
@@ -47,14 +39,3 @@ passport.use(new GoogleStrategy(
     }
   }
 ));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);  
-});
-
-passport.deserializeUser(async (id, done) => {
-  const user = await userModel.findById(id);
-  done(null, user); 
-});
-
-export default passport;
