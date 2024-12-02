@@ -1,3 +1,10 @@
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import jwt from 'jsonwebtoken';
+import userModel from '../DB/models/user.model.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
 passport.use(new GoogleStrategy(
   {
     clientID: process.env.CLIENTID, 
@@ -39,4 +46,15 @@ passport.use(new GoogleStrategy(
     }
   }
 ));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);  
+});
+
+passport.deserializeUser(async (id, done) => {
+  const user = await userModel.findById(id);
+  done(null, user); 
+});
+
+
 export default passport;
