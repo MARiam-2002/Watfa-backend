@@ -233,12 +233,11 @@ export const allCountryWithFlag = asyncHandler((req, res,next) => {
     flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
   }));
 
-  console.log(countriesData);
   return res.json({
     success: true,
     message: "Countries with flags",
     data: countriesData,
   });
 
-  
+
 });
