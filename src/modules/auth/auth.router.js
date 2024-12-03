@@ -64,7 +64,6 @@ router.get(
         role: req.session.role || "buyer",
       },
       process.env.TOKEN_KEY,
-      { expiresIn: "1h" }
     );
 
     return res.status(201).json({
@@ -83,7 +82,7 @@ router.get(
 router.get(
   "/google",
   (req, res, next) => {
-    const role = req.query.role || "buyer"; // افتراض دور "buyer" إذا لم يتم تحديده
+    const role = req.query.role || "buyer"; // تعيين دور افتراضي
     req.session.role = role; // تخزين الدور في الجلسة
     next();
   },
@@ -108,7 +107,6 @@ router.get(
         role: req.session.role || "buyer",
       },
       process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
-      { expiresIn: "1h" }
     );
 
     // إرجاع الـ user مع الـ token
@@ -117,6 +115,8 @@ router.get(
       message: "login google successful",
       data: {
         email: req.user.email,
+        phone: req.user.phoneNumber,
+        country:req.country,
         userName: req.user.userName,
         role: req.user.role,
         token,

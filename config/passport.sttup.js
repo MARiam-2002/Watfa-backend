@@ -8,28 +8,31 @@ dotenv.config();
 
 import { google } from "googleapis";
 
-async function getPhoneNumber(accessToken) {
+async function getUserDetails(accessToken) {
   try {
-    const peopleService = google.people({ version: "v1", auth: accessToken });
+    const peopleService = google.people({ version: 'v1', auth: accessToken });
 
     // قم بتحميل بيانات المستخدم من People API
     const res = await peopleService.people.get({
-      resourceName: "people/me",
-      personFields: "phoneNumbers",
+      resourceName: 'people/me',
+      personFields: 'phoneNumbers,addresses',
     });
 
-    // استخراج رقم الهاتف إذا كان موجودًا
+    // استخراج رقم الهاتف
     const phoneNumbers = res.data.phoneNumbers;
-    if (phoneNumbers && phoneNumbers.length > 0) {
-      return phoneNumbers[0].value; // يرجع أول رقم هاتف موجود
-    } else {
-      return null; // لا يوجد رقم هاتف
-    }
+    const phoneNumber = phoneNumbers && phoneNumbers.length > 0 ? phoneNumbers[0].value : null;
+
+    // استخراج العناوين
+    const addresses = res.data.addresses;
+    const country = addresses && addresses.length > 0 ? addresses[0].country : null;
+
+    return { phoneNumber, country };
   } catch (error) {
-    console.error("Error fetching phone number: ", error);
-    return null;
+    console.error("Error fetching user details: ", error);
+    return { phoneNumber: null, country: null };
   }
 }
+
 
 passport.use(
   new GoogleStrategy(
@@ -43,8 +46,8 @@ passport.use(
       try {
         const role = req.session.role || "buyer";
 
-        // جلب رقم الهاتف باستخدام getPhoneNumber
-        const phoneNumber = await getPhoneNumber(accessToken);
+        // جلب التفاصيل (رقم الهاتف والدولة)
+        const { phoneNumber, country } = await getUserDetails(accessToken);
 
         let user = await userModel.findOne({
           $or: [
@@ -60,6 +63,7 @@ passport.use(
             userName: profile.displayName,
             email: profile.emails[0].value,
             phoneNumber, // تخزين رقم الهاتف
+            country, // تخزين الدولة
             role,
           });
 
@@ -72,6 +76,7 @@ passport.use(
             email: user.email,
             userName: user.userName,
             phoneNumber: user.phoneNumber,
+            country: user.country,
             role: user.role,
           },
           process.env.TOKEN_KEY,
@@ -85,6 +90,7 @@ passport.use(
     }
   )
 );
+
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
