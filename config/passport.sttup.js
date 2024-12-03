@@ -1,12 +1,11 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import jwt from "jsonwebtoken";
-import userModel from "../DB/models/user.model.js";
 import dotenv from "dotenv";
-import axios from "axios"; // نحتاج إلى axios لإرسال طلب إلى Google People API
 dotenv.config();
 
 import { google } from "googleapis";
+import userModel from "../DB/models/user.model.js";
 
 async function getUserDetails(accessToken) {
   try {
