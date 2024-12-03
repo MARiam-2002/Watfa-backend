@@ -35,12 +35,14 @@ export const register = asyncHandler(async (req, res, next) => {
   const isEmail = emailRegex.test(userNameOrEmail);
 
   // التحقق إذا كان البريد الإلكتروني أو اسم المستخدم موجود مسبقًا
-  const isUser = await userModel.findOne({
-    $or: [
-      { email: isEmail ? userNameOrEmail : null },
-      { userName: !isEmail ? userNameOrEmail : null },
-    ],
-  });
+  let isUser;
+  if (isEmail) {
+    // إذا كانت القيمة المدخلة هي بريد إلكتروني
+    isUser = await userModel.findOne({ email: userNameOrEmail });
+  } else {
+    // إذا كانت القيمة المدخلة هي اسم مستخدم
+    isUser = await userModel.findOne({ userName: userNameOrEmail });
+  }
 
   // إذا كان المستخدم موجودًا مسبقًا
   if (isUser) {
@@ -116,6 +118,7 @@ export const register = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
 
 
 
