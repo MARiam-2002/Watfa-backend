@@ -13,7 +13,8 @@ import { countries } from "countries-list";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
-    userNameOrEmail,
+    email,
+    userName,
     password,
     confirmPassword,
     phoneNumber,
