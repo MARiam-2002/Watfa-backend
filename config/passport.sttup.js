@@ -10,28 +10,29 @@ import { google } from "googleapis";
 
 async function getUserDetails(accessToken) {
   try {
-    const peopleService = google.people({ version: 'v1', auth: accessToken });
+    const peopleService = google.people({ version: "v1", auth: accessToken });
 
-    // قم بتحميل بيانات المستخدم من People API
+    // طلب بيانات المستخدم
     const res = await peopleService.people.get({
-      resourceName: 'people/me',
-      personFields: 'phoneNumbers,addresses',
+      resourceName: "people/me",
+      personFields: "phoneNumbers,addresses",
     });
 
     // استخراج رقم الهاتف
     const phoneNumbers = res.data.phoneNumbers;
     const phoneNumber = phoneNumbers && phoneNumbers.length > 0 ? phoneNumbers[0].value : null;
 
-    // استخراج العناوين
+    // استخراج الدولة من العناوين
     const addresses = res.data.addresses;
     const country = addresses && addresses.length > 0 ? addresses[0].country : null;
 
     return { phoneNumber, country };
   } catch (error) {
-    console.error("Error fetching user details: ", error);
+    console.error("Error fetching user details: ", error.message);
     return { phoneNumber: null, country: null };
   }
 }
+
 
 
 passport.use(
@@ -41,6 +42,12 @@ passport.use(
       clientSecret: process.env.CLIENTSECRET,
       callbackURL: "https://watfa-backend.vercel.app/auth/google/callback",
       passReqToCallback: true,
+      scope: [
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/user.phonenumbers.read",
+        "https://www.googleapis.com/auth/user.addresses.read",
+      ],
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {

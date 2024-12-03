@@ -63,7 +63,7 @@ router.get(
         userName: req.user.userName,
         role: req.session.role || "buyer",
       },
-      process.env.TOKEN_KEY,
+      process.env.TOKEN_KEY
     );
 
     return res.status(201).json({
@@ -91,6 +91,7 @@ router.get(
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/user.phonenumbers.read",
+      "https://www.googleapis.com/auth/user.addresses.read",
     ],
   })
 );
@@ -106,7 +107,7 @@ router.get(
         userName: req.user.userName,
         role: req.session.role || "buyer",
       },
-      process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
+      process.env.TOKEN_KEY // تأكد من تعيين هذا المفتاح في متغيرات البيئة
     );
 
     // إرجاع الـ user مع الـ token
@@ -116,7 +117,7 @@ router.get(
       data: {
         email: req.user.email,
         phone: req.user.phoneNumber,
-        country:req.user.country,
+        country: req.user.country,
         userName: req.user.userName,
         role: req.user.role,
         token,
