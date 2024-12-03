@@ -116,7 +116,7 @@ router.get(
       data: {
         email: req.user.email,
         phone: req.user.phoneNumber,
-        country:req.country,
+        country:req.user.country,
         userName: req.user.userName,
         role: req.user.role,
         token,
