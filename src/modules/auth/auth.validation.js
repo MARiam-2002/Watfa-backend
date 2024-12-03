@@ -80,11 +80,6 @@ export const loginSchema = joi
       .required()
       .label("Email")
       .messages(defaultMessages),
-    userName: joi
-      .string()
-      .required()
-      .label("Username")
-      .messages(defaultMessages),
 
     password: joi
       .string()
