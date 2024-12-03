@@ -34,10 +34,12 @@ export const register = asyncHandler(async (req, res, next) => {
   });
 
   if (isUser) {
-    return next(
-      new Error("Email or Username is already registered!", { cause: 409 })
-    );
+    return res.status(404).json({
+      success: false,
+      message: "Email or Username is already registered!",
+    });
   }
+  
 
   if (password !== confirmPassword) {
     return next(new Error("Passwords do not match!", { cause: 400 }));
