@@ -4,7 +4,7 @@ import { isValidation } from "../../middleware/validation.middleware.js";
 import * as userController from "./controller/auth.js";
 import { isAuthenticated } from "../../middleware/authentication.middleware.js";
 import passportFace from "../../../config/passport.facebook.js";
-import passport from "../../../config/passport.sttup.js"
+import passport from "../../../config/passport.sttup.js";
 import jwt from "jsonwebtoken";
 const router = Router();
 
@@ -87,7 +87,13 @@ router.get(
     req.session.role = role; // تخزين الدور في الجلسة
     next();
   },
-  passport.authenticate('google', { scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.phonenumbers.read', 'https://www.googleapis.com/auth/contacts.read'] })
+  passport.authenticate("google", {
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/user.phonenumbers.read",
+    ],
+  })
 );
 
 router.get(
@@ -99,7 +105,7 @@ router.get(
         id: req.user._id,
         email: req.user.email,
         userName: req.user.userName,
-        role: req.session.role || 'buyer',
+        role: req.session.role || "buyer",
       },
       process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
       { expiresIn: "1h" }
