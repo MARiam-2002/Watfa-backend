@@ -87,7 +87,7 @@ router.get(
     req.session.role = role; // تخزين الدور في الجلسة
     next();
   },
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate('google', { scope: ['profile', 'email', 'https://www.googleapis.com/auth/user.phonenumbers.read', 'https://www.googleapis.com/auth/contacts.read'] })
 );
 
 router.get(
