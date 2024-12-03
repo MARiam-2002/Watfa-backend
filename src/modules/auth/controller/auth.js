@@ -22,6 +22,14 @@ export const register = asyncHandler(async (req, res, next) => {
     country,
   } = req.body;
 
+  // التحقق من أن المدخل ليس فارغًا
+  if (!userNameOrEmail || !password || !confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required!",
+    });
+  }
+
   // التحقق من صحة البريد الإلكتروني
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isEmail = emailRegex.test(userNameOrEmail);
@@ -108,6 +116,7 @@ export const register = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
 
 
 export const login = asyncHandler(async (req, res, next) => {
