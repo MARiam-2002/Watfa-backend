@@ -13,17 +13,17 @@ const defaultMessages = {
 
 export const registerSchema = joi
   .object({
-    userNameOrEmail: joi
+    email: joi
       .string()
-      .regex(/^[a-zA-Z0-9._]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-      .trim()
+      .email()
       .required()
-      .label("Username or Email")
-      .messages({
-        ...defaultMessages,
-        "string.pattern.base":
-          "Username can only contain alphanumeric characters, periods, underscores, or must be a valid email.",
-      }),
+      .label("Email")
+      .messages(defaultMessages),
+    userName: joi
+      .string()
+      .required()
+      .label("Username")
+      .messages(defaultMessages),
 
     role: joi
       .string()
@@ -74,17 +74,17 @@ export const registerSchema = joi
 
 export const loginSchema = joi
   .object({
-    userNameOrEmail: joi
+    email: joi
       .string()
-      .regex(/^[a-zA-Z0-9._]+$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-      .trim()
+      .email()
       .required()
-      .label("Username or Email")
-      .messages({
-        ...defaultMessages,
-        "string.pattern.base":
-          "Username can only contain alphanumeric characters, periods, underscores, or must be a valid email.",
-      }),
+      .label("Email")
+      .messages(defaultMessages),
+    userName: joi
+      .string()
+      .required()
+      .label("Username")
+      .messages(defaultMessages),
 
     password: joi
       .string()
@@ -93,7 +93,6 @@ export const loginSchema = joi
       .messages(defaultMessages),
   })
   .required();
-
 
 export const forgetCode = joi
   .object({
