@@ -208,18 +208,21 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
   return res.status(200).json({ success: true, message: "Try to login!" });
 });
 
-export const allCountryWithFlag = asyncHandler((req, res, next) => {
-  console.log("allCountryWithFlag");
-  const countriesData = Object.keys(countries).map((code) => ({
-    name: countries[code].name,
-    code: code,
-    phone: `+${countries[code].phone}`,
-    flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
-  }));
-
-  return res.json({
-    success: true,
-    message: "Countries with flags",
-    data: countriesData,
+  export const allCountryWithFlag = asyncHandler((req, res, next) => {
+  
+    const gulfCountriesCodes = ["BH", "KW", "OM", "QA", "SA", "AE"];
+  
+    const gulfCountriesData = gulfCountriesCodes.map((code) => ({
+      name: countries[code].name,
+      code: code,
+      phone: `+${countries[code].phone}`,
+      flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
+    }));
+  
+    return res.json({
+      success: true,
+      message: "Gulf Countries with flags",
+      data: gulfCountriesData,
+    });
   });
-});
+  
