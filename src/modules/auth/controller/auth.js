@@ -28,9 +28,9 @@ export const register = asyncHandler(async (req, res, next) => {
 
   const isUser = await userModel.findOne({
     $or: [
-      { email: isEmail ? userNameOrEmail : null },
-      { userName: !isEmail ? userNameOrEmail : null },
-    ],
+      isEmail ? { email: userNameOrEmail } : null,
+      !isEmail ? { userName: userNameOrEmail } : null,
+    ].filter(Boolean), // تنقية القيم null من الاستعلام
   });
 
   if (isUser) {
