@@ -26,12 +26,15 @@ export const register = asyncHandler(async (req, res, next) => {
 
   const isEmail = emailRegex.test(userNameOrEmail);
 
-  const isUser = await userModel.findOne({
-    $or: [
-      isEmail ? { email: userNameOrEmail } : null,
-      !isEmail ? { userName: userNameOrEmail } : null,
-    ].filter(Boolean), // تنقية القيم null من الاستعلام
-  });
+  const conditions = [];
+  if (isEmail) {
+    conditions.push({ email: userNameOrEmail });
+  } else {
+    conditions.push({ userName: userNameOrEmail });
+  }
+  
+  const isUser = await userModel.findOne({ $or: conditions });
+  
 
   if (isUser) {
     return res.status(404).json({
