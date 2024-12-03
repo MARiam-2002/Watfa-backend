@@ -10,12 +10,12 @@ import { google } from "googleapis";
 
 async function getPhoneNumber(accessToken) {
   try {
-    const peopleService = google.people({ version: 'v1', auth: accessToken });
-    
+    const peopleService = google.people({ version: "v1", auth: accessToken });
+
     // قم بتحميل بيانات المستخدم من People API
     const res = await peopleService.people.get({
-      resourceName: 'people/me',
-      personFields: 'phoneNumbers',
+      resourceName: "people/me",
+      personFields: "phoneNumbers",
     });
 
     // استخراج رقم الهاتف إذا كان موجودًا
@@ -85,8 +85,6 @@ passport.use(
     }
   )
 );
-
-
 
 passport.serializeUser((user, done) => {
   done(null, user.id);
