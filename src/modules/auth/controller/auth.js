@@ -22,47 +22,50 @@ export const register = asyncHandler(async (req, res, next) => {
     country,
   } = req.body;
 
+  // التحقق من صحة البريد الإلكتروني
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   const isEmail = emailRegex.test(userNameOrEmail);
 
-  const conditions = [];
-  if (isEmail) {
-    conditions.push({ email: userNameOrEmail });
-  } else {
-    conditions.push({ userName: userNameOrEmail });
-  }
-  
-  const isUser = await userModel.findOne({ $or: conditions });
-  
+  // التحقق إذا كان البريد الإلكتروني أو اسم المستخدم موجود مسبقًا
+  const isUser = await userModel.findOne({
+    $or: [
+      { email: isEmail ? userNameOrEmail : null },
+      { userName: !isEmail ? userNameOrEmail : null },
+    ],
+  });
 
+  // إذا كان المستخدم موجودًا مسبقًا
   if (isUser) {
-    return res.status(404).json({
+    return res.status(409).json({
       success: false,
       message: "Email or Username is already registered!",
     });
   }
-  
 
+  // التحقق من تطابق كلمات المرور
   if (password !== confirmPassword) {
     return next(new Error("Passwords do not match!", { cause: 400 }));
   }
 
+  // التحقق من صحة الدور
   if (!["buyer", "seller"].includes(role)) {
     return next(new Error("Invalid role provided!", { cause: 400 }));
   }
 
+  // إذا كان الدور "seller"، يجب إدخال اسم الشركة
   if (role === "seller" && !companyName) {
     return next(
       new Error("Company name is required for sellers!", { cause: 400 })
     );
   }
 
+  // تشفير كلمة المرور
   const hashPassword = bcryptjs.hashSync(
     password,
     Number(process.env.SALT_ROUND)
   );
 
+  // إنشاء مستخدم جديد
   const user = await userModel.create({
     userName: isEmail ? null : userNameOrEmail,
     email: isEmail ? userNameOrEmail : null,
@@ -73,6 +76,7 @@ export const register = asyncHandler(async (req, res, next) => {
     country,
   });
 
+  // إنشاء التوكن
   const token = jwt.sign(
     {
       id: user._id,
@@ -83,25 +87,28 @@ export const register = asyncHandler(async (req, res, next) => {
     process.env.TOKEN_KEY
   );
 
+  // تخزين التوكن في قاعدة البيانات
   await tokenModel.create({
     token,
     user: user._id,
     agent: req.headers["user-agent"],
   });
 
+  // إرسال الرد
   return res.status(201).json({
     success: true,
     message: "Registration successful!",
     data: {
       email: user.email,
       userName: user.userName,
-      phone:user.phoneNumber,
-      country:user.country,
+      phone: user.phoneNumber,
+      country: user.country,
       role,
       token,
     },
   });
 });
+
 
 export const login = asyncHandler(async (req, res, next) => {
   const { userNameOrEmail, password } = req.body;
