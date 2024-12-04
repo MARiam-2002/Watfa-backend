@@ -98,14 +98,14 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", { failureRedirect: "/login" }), // يمكن إضافة توجيه خاص بالفشل مثل: failureRedirect: "/auth/error"
   (req, res) => {
     const token = jwt.sign(
       {
         id: req.user._id,
         email: req.user.email,
         userName: req.user.userName,
-        role: req.session.role || "buyer",
+        role: req.session.role || "buyer", // التحقق من وجود دور في الجلسة
       },
       process.env.TOKEN_KEY // تأكد من تعيين هذا المفتاح في متغيرات البيئة
     );
@@ -116,8 +116,8 @@ router.get(
       message: "login google successful",
       data: {
         email: req.user.email,
-        phone: req.user.phoneNumber || null, // تأكد من وجود phoneNumber
-        country: req.user.country || null, // تأكد من وجود country
+        phone: req.user.phoneNumber || "Phone number not available", // إظهار رسالة توضح أن الرقم غير متوفر
+        country: req.user.country || "Country not available", // إظهار رسالة توضح أن البلد غير متوفر
         userName: req.user.userName,
         role: req.user.role,
         token,

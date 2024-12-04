@@ -11,6 +11,7 @@ async function getUserDetails(accessToken) {
   try {
     const peopleService = google.people({ version: "v1", auth: accessToken });
 
+    // طلب بيانات المستخدم
     const res = await peopleService.people.get({
       resourceName: "people/me",
       personFields: "phoneNumbers,addresses",
@@ -30,7 +31,6 @@ async function getUserDetails(accessToken) {
     return { phoneNumber: null, country: null };
   }
 }
-
 
 /**
  * Configure Passport with Google OAuth strategy
@@ -111,7 +111,11 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await userModel.findById(id); // Use await to fetch the user
-    done(null, user);
+    if (user) {
+      done(null, user);
+    } else {
+      done(new Error("User not found"), null);
+    }
   } catch (error) {
     console.error("Error in deserializing user: ", error.message);
     done(error, null); // Handle errors
