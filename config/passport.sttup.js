@@ -42,12 +42,6 @@ passport.use(
       clientSecret: process.env.CLIENTSECRET,
       callbackURL: "https://watfa-backend.vercel.app/auth/google/callback",
       passReqToCallback: true,
-      scope: [
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/user.phonenumbers.read", // صلاحية رقم الهاتف
-        "https://www.googleapis.com/auth/user.addresses.read",  // صلاحية العنوان
-      ],
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
