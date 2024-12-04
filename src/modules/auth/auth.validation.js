@@ -49,13 +49,13 @@ export const registerSchema = joi
 
     password: joi
       .string()
-      .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/)
+      .regex(/^(?=.*[A-Z])(?=.*\d|.*[!@#$%^&*(),.?":{}|<>])(?=.{8,}).*$/)
       .required()
       .label("Password")
       .messages({
         ...defaultMessages,
         "string.pattern.base":
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number.",
+          "Password must be at least 8 characters long, contain at least one uppercase letter, and include either a number or a special character.",
       }),
 
     confirmPassword: joi
@@ -83,9 +83,14 @@ export const loginSchema = joi
 
     password: joi
       .string()
+      .regex(/^(?=.*[A-Z])(?=.*\d|.*[!@#$%^&*(),.?":{}|<>])(?=.{8,}).*$/)
       .required()
       .label("Password")
-      .messages(defaultMessages),
+      .messages({
+        ...defaultMessages,
+        "string.pattern.base":
+          "Password must be at least 8 characters long, contain at least one uppercase letter, and include either a number or a special character.",
+      }),
   })
   .required();
 
