@@ -44,7 +44,7 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         // تحديد الدور الافتراضي (buyer) إذا لم يتم تحديده
-        const role = "buyer"; // تعيين دور افتراضي مباشرة في حالة عدم وجود session
+        const role = req.session?.role || "buyer";
 
         // جلب بيانات إضافية (رقم الهاتف والدولة)
         const { phoneNumber, country } = await getUserDetails(accessToken);
@@ -86,15 +86,32 @@ passport.use(
           { expiresIn: "1h" }
         );
 
-        // إرسال التوكن مباشرة بعد المصادقة
-        done(null, user);
-
+        // إرجاع المستخدم بعد المصادقة مع التوكن
+        return done(null, user);
       } catch (error) {
         console.error("Error in Google strategy: ", error.message);
-        done(error, null);
+        return done(error, null); // ارسال الخطأ إلى Passport وليس استخدام res
       }
     }
   )
 );
+
+// استخدام JWT بدلاً من الجلسات في الخطوة التالية
+passport.serializeUser((user, done) => {
+  done(null, user.id); // فقط حفظ الـ ID
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await userModel.findById(id);
+    if (user) {
+      done(null, user);
+    } else {
+      done(new Error("User not found"), null);
+    }
+  } catch (error) {
+    done(error, null);
+  }
+});
 
 export default passport;
