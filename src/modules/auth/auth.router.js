@@ -83,7 +83,8 @@ router.get(
   "/google",
   (req, res, next) => {
     const role = req.query.role || "buyer"; // تعيين دور افتراضي
-    req.session.role = role; // تخزين الدور في الجلسة
+    // يمكنك تخزين الدور في التوكن مباشرة بدلاً من الجلسة إذا كنت تعتمد على JWT فقط
+    req.session.role = role; // تخزين الدور في الجلسة (إذا كنت لا تستخدم JWT فقط، يمكنك إلغاء هذا)
     next();
   },
   passport.authenticate("google", {
@@ -100,6 +101,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }), // يمكن إضافة توجيه خاص بالفشل مثل: failureRedirect: "/auth/error"
   (req, res) => {
+    // توليد التوكن JWT
     const token = jwt.sign(
       {
         id: req.user._id,
@@ -107,20 +109,21 @@ router.get(
         userName: req.user.userName,
         role: req.session.role || "buyer", // التحقق من وجود دور في الجلسة
       },
-      process.env.TOKEN_KEY // تأكد من تعيين هذا المفتاح في متغيرات البيئة
+      process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
+      { expiresIn: "1h" } // إضافة مدة صلاحية للتوكن
     );
 
     // إرجاع الـ user مع الـ token
     return res.status(201).json({
       success: true,
-      message: "login google successful",
+      message: "Login via Google successful",
       data: {
         email: req.user.email,
         phone: req.user.phoneNumber || "Phone number not available", // إظهار رسالة توضح أن الرقم غير متوفر
         country: req.user.country || "Country not available", // إظهار رسالة توضح أن البلد غير متوفر
         userName: req.user.userName,
         role: req.user.role,
-        token,
+        token, // إرسال التوكن للمستخدم
       },
     });
   }

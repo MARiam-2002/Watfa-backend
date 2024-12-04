@@ -25,7 +25,7 @@ async function getUserDetails(accessToken) {
 
     return { phoneNumber, country };
   } catch (error) {
-    console.error("Error fetching user details: ", error); // تسجيل كامل الكائن لمعرفة السبب
+    console.error("Error fetching user details: ", error.message); // تسجيل الخطأ بشكل مفصل
     return { phoneNumber: null, country: null }; // الإرجاع بالقيم الافتراضية
   }
 }
@@ -86,38 +86,15 @@ passport.use(
           { expiresIn: "1h" }
         );
 
-        // إرجاع المستخدم بعد المصادقة
+        // إرسال التوكن إلى العميل
+        res.json({ token }); // إرسال التوكن في استجابة JSON
         done(null, user);
       } catch (error) {
-        console.error("Error in Google strategy: ", error.message);
-        done(error, null);
+        console.error("Error in Google strategy: ", error.message); // تسجيل الخطأ
+        done(error, null); // إرسال الخطأ إلى Passport
       }
     }
   )
 );
-
-/**
- * تسلسل المستخدم إلى الجلسة
- */
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-/**
- * فك تسلسل المستخدم من الجلسة
- */
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await userModel.findById(id);
-    if (user) {
-      done(null, user);
-    } else {
-      done(new Error("User not found"), null);
-    }
-  } catch (error) {
-    console.error("Error in deserializing user: ", error.message);
-    done(error, null);
-  }
-});
 
 export default passport;

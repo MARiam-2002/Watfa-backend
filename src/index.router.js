@@ -50,13 +50,18 @@ export const bootstrap = (app, express) => {
 
   app.use(
     session({
-      secret: process.env.SESSION_SECRET, // تأكد من أنك وضعت السر الخاص بالجسة في ملف .env
+      secret: process.env.SESSION_SECRET, // تأكد من أن هذه القيمة قوية
       resave: false,
-      saveUninitialized: true,
-      cookie: { secure: false }, // تأكد من تعيين secure إلى true في بيئة الإنتاج باستخدام HTTPS
+      saveUninitialized: false, // عدم تخزين الجلسات غير المعدلة
+      cookie: {
+        secure: process.env.NODE_ENV === "production", // true إذا كنت تستخدم HTTPS
+        httpOnly: true, // لمنع الوصول إليها من خلال JavaScript
+        maxAge: 1000 * 60 * 60 * 24, // عمر الكوكيز (مثال: يوم واحد)
+      },
     })
   );
-
+  
+  
   app.use(passport.initialize());
   app.use(passport.session()); // تفعيل الجلسات مع Passport
 
