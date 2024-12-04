@@ -28,9 +28,7 @@ export const register = asyncHandler(async (req, res, next) => {
   });
 
   if (isUser) {
-    return next(
-      new Error("Email or Username is already registered!", { cause: 409 })
-    );
+  return res.status(400).json({ success: false, message: "Email or userName already exists!" });
   }
 
   if (password !== confirmPassword) {
