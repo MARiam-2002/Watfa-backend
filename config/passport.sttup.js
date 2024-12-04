@@ -110,7 +110,8 @@ passport.serializeUser((user, done) => {
  */
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await userModel.findById(id).exec(); // Use await to fetch the user
+    // Using await with findById and exec to ensure it's asynchronous
+    const user = await userModel.findById(id).exec(); // Ensure to use exec() here as well
     if (user) {
       done(null, user);
     } else {
