@@ -84,6 +84,8 @@ export const register = asyncHandler(async (req, res, next) => {
     data: {
       email: user.email,
       userName: user.userName,
+      phone: user.phoneNumber,
+      country,
       role,
       token,
     },
@@ -133,6 +135,8 @@ export const login = asyncHandler(async (req, res, next) => {
     data: {
       email: user.email,
       userName: user.userName,
+      phone: user.phoneNumber,  
+      country,
       role: user.role,
       token,
     },
