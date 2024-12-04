@@ -116,8 +116,8 @@ router.get(
       message: "login google successful",
       data: {
         email: req.user.email,
-        phone: req.user.phoneNumber,
-        country: req.user.country,
+        phone: req.user.phoneNumber || null, // تأكد من وجود phoneNumber
+        country: req.user.country || null, // تأكد من وجود country
         userName: req.user.userName,
         role: req.user.role,
         token,
@@ -125,4 +125,5 @@ router.get(
     });
   }
 );
+
 export default router;

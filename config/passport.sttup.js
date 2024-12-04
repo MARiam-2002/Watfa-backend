@@ -11,18 +11,15 @@ async function getUserDetails(accessToken) {
   try {
     const peopleService = google.people({ version: "v1", auth: accessToken });
 
-    // Request user details
     const res = await peopleService.people.get({
       resourceName: "people/me",
       personFields: "phoneNumbers,addresses",
     });
 
-    // Extract phone number
     const phoneNumbers = res.data.phoneNumbers;
     const phoneNumber =
       phoneNumbers && phoneNumbers.length > 0 ? phoneNumbers[0].value : null;
 
-    // Extract country from addresses
     const addresses = res.data.addresses;
     const country =
       addresses && addresses.length > 0 ? addresses[0].country : null;
@@ -33,6 +30,7 @@ async function getUserDetails(accessToken) {
     return { phoneNumber: null, country: null };
   }
 }
+
 
 /**
  * Configure Passport with Google OAuth strategy
