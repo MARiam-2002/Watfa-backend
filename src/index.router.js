@@ -12,7 +12,6 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
-import session from "express-session";
 import jwt from "jsonwebtoken";
 
 export const bootstrap = (app, express) => {
@@ -20,52 +19,46 @@ export const bootstrap = (app, express) => {
     app.use(morgan("common"));
   }
 
-  // const whiteList = ["http://127.0.0.1:5500",undefined];
-
-  // app.use((req, res, next) => {
-  //   if (req.originalUrl.includes("/auth/confirmEmail")) {
-  //     res.setHeader("Access-Control-Allow-Origin", "*");
-  //     res.setHeader("Access-Control-Allow-Methods", "GET");
-  //     return next();
-  //   }
-  //   if (!whiteList.includes(req.header("origin"))) {
-  //     return next(new Error("Blocked By CORS!"));
-  //   }
-  //   res.setHeader("Access-Control-Allow-Origin", "*");
-  //   res.setHeader("Access-Control-Allow-Headers", "*");
-  //   res.setHeader("Access-Control-Allow-Methods", "*");
-  //   res.setHeader("Access-Control-Allow-Private-Network", true);
-  //   return next();
-  // });
-  // app.use((req, res, next) => {
-  //   console.log(req.originalUrl);
-  //   if (req.originalUrl == "/order/webhook") {
-  //     next();
-  //   } else {
-  //     express.json()(req, res, next);
-  //   }
-  // });
+  // استخدام CORS للتمكين من الوصول من مصادر مختلفة
   app.use(cors());
+
+  // استخدم Express JSON لتحليل البيانات
   app.use(express.json());
 
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET, // تأكد من أن هذه القيمة قوية
-      resave: false,
-      saveUninitialized: false, // عدم تخزين الجلسات غير المعدلة
-      cookie: {
-        secure: process.env.NODE_ENV === "production", // true إذا كنت تستخدم HTTPS
-        httpOnly: true, // لمنع الوصول إليها من خلال JavaScript
-        maxAge: 1000 * 60 * 60 * 24, // عمر الكوكيز (مثال: يوم واحد)
-      },
-    })
-  );
+  // لا حاجة لاستخدام express-session لأنك ستعتمد على JWT بدلاً منها
+  // app.use(
+  //   session({
+  //     secret: process.env.SESSION_SECRET, 
+  //     resave: false,
+  //     saveUninitialized: false,
+  //     cookie: {
+  //       secure: process.env.NODE_ENV === "production", 
+  //       httpOnly: true, 
+  //       maxAge: 1000 * 60 * 60 * 24, 
+  //     },
+  //   })
+  // );
   
-  
+  // تفعيل passport، إذا كنت بحاجة لاستخدام passport مع JWT فقط، لا حاجة لتفعيل الجلسات
   app.use(passport.initialize());
-  app.use(passport.session()); // تفعيل الجلسات مع Passport
 
+  // إضافة وظيفة للتحقق من التوكن JWT على المسارات المحمية
+  app.use((req, res, next) => {
+    const token = req.headers["authorization"]?.split(" ")[1]; // الحصول على التوكن من الرأس
+    if (token) {
+      jwt.verify(token, process.env.TOKEN_KEY, (err, decoded) => {
+        if (err) {
+          return res.status(403).json({ message: "Invalid token" });
+        }
+        req.user = decoded; // إضافة بيانات المستخدم من التوكن إلى الطلب
+        next();
+      });
+    } else {
+      next();
+    }
+  });
 
+  // إضافة المسارات
   app.use("/auth", authRouter);
   app.use("/category", categoryRouter);
   app.use("/subCategory", subCategoryRouter);
@@ -74,13 +67,18 @@ export const bootstrap = (app, express) => {
   app.use("/coupon", couponRouter);
   app.use("/cart", cartRouter);
   app.use("/order", orderRouter);
+
+  // مسار غير موجود
   app.all("*", (req, res, next) => {
     console.log(3);
     return next(new Error("not found page", { cause: 404 }));
   });
 
+  // معالجة الأخطاء
   app.use((error, req, res, next) => {
     return res.json({ message: error.message, stack: error.stack });
   });
+
+  // إضافة التعامل مع الأخطاء العالمية (كما هو معرف في asyncHandler.js)
   app.use(globalErrorHandling);
 };
