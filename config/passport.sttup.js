@@ -95,6 +95,7 @@ passport.use(
   )
 );
 
+
 // استخدام JWT بدلاً من الجلسات في الخطوة التالية
 passport.serializeUser((user, done) => {
   done(null, user.id); // فقط حفظ الـ ID
