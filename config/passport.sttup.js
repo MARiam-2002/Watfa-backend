@@ -7,33 +7,31 @@ import userModel from "../DB/models/user.model.js";
 
 dotenv.config();
 
+/**
+ * وظيفة لجلب بيانات المستخدم (رقم الهاتف والدولة) باستخدام Google People API
+ */
 async function getUserDetails(accessToken) {
   try {
     const peopleService = google.people({ version: "v1", auth: accessToken });
 
-    // طلب بيانات المستخدم
+    // جلب البيانات الضرورية فقط
     const res = await peopleService.people.get({
       resourceName: "people/me",
       personFields: "phoneNumbers,addresses",
     });
 
-    const phoneNumbers = res.data.phoneNumbers;
-    const phoneNumber =
-      phoneNumbers && phoneNumbers.length > 0 ? phoneNumbers[0].value : null;
-
-    const addresses = res.data.addresses;
-    const country =
-      addresses && addresses.length > 0 ? addresses[0].country : null;
+    const phoneNumber = res.data.phoneNumbers?.[0]?.value || null;
+    const country = res.data.addresses?.[0]?.country || null;
 
     return { phoneNumber, country };
   } catch (error) {
-    console.error("Error fetching user details: ", error.message);
-    return { phoneNumber: null, country: null };
+    console.error("Error fetching user details: ", error); // تسجيل كامل الكائن لمعرفة السبب
+    return { phoneNumber: null, country: null }; // الإرجاع بالقيم الافتراضية
   }
 }
 
 /**
- * Configure Passport with Google OAuth strategy
+ * إعداد استراتيجية Google OAuth في Passport
  */
 passport.use(
   new GoogleStrategy(
@@ -45,36 +43,36 @@ passport.use(
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
-        // Determine role from session or default to "buyer"
+        // تحديد الدور الافتراضي (buyer) إذا لم يتم تحديده
         const role = req.session?.role || "buyer";
 
-        // Fetch additional user details (phoneNumber, country)
+        // جلب بيانات إضافية (رقم الهاتف والدولة)
         const { phoneNumber, country } = await getUserDetails(accessToken);
 
-        // Check if user already exists
+        // البحث عن المستخدم في قاعدة البيانات
         let user = await userModel.findOne({
           $or: [
             { googleId: profile.id },
             { email: profile.emails[0].value },
             { userName: profile.displayName },
           ],
-        }).exec(); // Ensure to call exec() with async/await
+        });
 
-        // If user doesn't exist, create a new one
+        // إذا لم يتم العثور على المستخدم، قم بإنشاء مستخدم جديد
         if (!user) {
           user = new userModel({
             googleId: profile.id,
             userName: profile.displayName,
             email: profile.emails[0].value,
-            phoneNumber, // Save phone number
-            country, // Save country
-            role, // Save role
+            phoneNumber, // حفظ رقم الهاتف
+            country, // حفظ الدولة
+            role, // حفظ الدور
           });
 
           await user.save();
         }
 
-        // Generate JWT token for the user
+        // توليد التوكن JWT
         const token = jwt.sign(
           {
             id: user._id,
@@ -88,7 +86,7 @@ passport.use(
           { expiresIn: "1h" }
         );
 
-        // Return the user object
+        // إرجاع المستخدم بعد المصادقة
         done(null, user);
       } catch (error) {
         console.error("Error in Google strategy: ", error.message);
@@ -99,19 +97,18 @@ passport.use(
 );
 
 /**
- * Serialize user instance to the session
+ * تسلسل المستخدم إلى الجلسة
  */
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
 /**
- * Deserialize user instance from the session
+ * فك تسلسل المستخدم من الجلسة
  */
 passport.deserializeUser(async (id, done) => {
   try {
-    // Using await with findById and exec to ensure it's asynchronous
-    const user = await userModel.findById(id).exec(); // Ensure to use exec() here as well
+    const user = await userModel.findById(id);
     if (user) {
       done(null, user);
     } else {
@@ -119,7 +116,7 @@ passport.deserializeUser(async (id, done) => {
     }
   } catch (error) {
     console.error("Error in deserializing user: ", error.message);
-    done(error, null); // Handle errors
+    done(error, null);
   }
 });
 
