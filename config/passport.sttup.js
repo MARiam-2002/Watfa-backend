@@ -43,7 +43,7 @@ passport.use(
     {
       clientID: process.env.CLIENTID,
       clientSecret: process.env.CLIENTSECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/auth/google/callback",
+      callbackURL:"https://watfa-backend.vercel.app/auth/google/callback",
       passReqToCallback: true,
       scope: [
         "https://www.googleapis.com/auth/userinfo.profile",
