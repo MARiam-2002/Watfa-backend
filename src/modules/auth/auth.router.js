@@ -99,17 +99,18 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }), // فشل التوجيه
+  passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
+    // توليد التوكن JWT بعد التحقق من المستخدم
     const token = jwt.sign(
       {
         id: req.user._id,
         email: req.user.email,
         userName: req.user.userName,
-        role: req.session.role || "buyer", // التحقق من وجود دور في الجلسة
+        role: req.user.role || "buyer", // التحقق من وجود دور في الجلسة
       },
       process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
-      { expiresIn: "1h" } // مدة صلاحية التوكن
+      { expiresIn: "1h" }
     );
 
     // إرجاع الـ user مع الـ token
@@ -118,15 +119,16 @@ router.get(
       message: "Login via Google successful",
       data: {
         email: req.user.email,
-        phone: req.user.phoneNumber || "Phone number not available", // إظهار رسالة توضح أن الرقم غير متوفر
-        country: req.user.country || "Country not available", // إظهار رسالة توضح أن البلد غير متوفر
+        phone: req.user.phoneNumber || "Phone number not available",
+        country: req.user.country || "Country not available",
         userName: req.user.userName,
         role: req.user.role,
-        token, // إرسال التوكن للمستخدم
+        token,
       },
     });
   }
 );
+
 
 
 export default router;

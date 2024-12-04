@@ -25,7 +25,7 @@ async function getUserDetails(accessToken) {
 
     return { phoneNumber, country };
   } catch (error) {
-    console.error("Error fetching user details: ", error.message); // تسجيل الخطأ بشكل مفصل
+    console.error("Error fetching user details: ", error.message);
     return { phoneNumber: null, country: null }; // الإرجاع بالقيم الافتراضية
   }
 }
@@ -44,7 +44,7 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         // تحديد الدور الافتراضي (buyer) إذا لم يتم تحديده
-        const role = req.session?.role || "buyer";
+        const role = "buyer"; // تعيين دور افتراضي مباشرة في حالة عدم وجود session
 
         // جلب بيانات إضافية (رقم الهاتف والدولة)
         const { phoneNumber, country } = await getUserDetails(accessToken);
@@ -86,16 +86,15 @@ passport.use(
           { expiresIn: "1h" }
         );
 
-        // إرجاع المستخدم بعد المصادقة مع التوكن
-        done(null, user); // لا تستخدم res هنا
+        // إرسال التوكن مباشرة بعد المصادقة
+        done(null, user);
 
       } catch (error) {
         console.error("Error in Google strategy: ", error.message);
-        done(error, null); // ارسال الخطأ إلى Passport وليس استخدام res
+        done(error, null);
       }
     }
   )
 );
-
 
 export default passport;
