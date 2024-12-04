@@ -58,7 +58,7 @@ passport.use(
             { email: profile.emails[0].value },
             { userName: profile.displayName },
           ],
-        });
+        }).exec(); // Ensure to call exec() with async/await
 
         // If user doesn't exist, create a new one
         if (!user) {
@@ -110,7 +110,7 @@ passport.serializeUser((user, done) => {
  */
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await userModel.findById(id); // Use await to fetch the user
+    const user = await userModel.findById(id).exec(); // Use await to fetch the user
     if (user) {
       done(null, user);
     } else {
