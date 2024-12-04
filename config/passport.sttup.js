@@ -7,7 +7,6 @@ import userModel from "../DB/models/user.model.js";
 
 dotenv.config();
 
-
 async function getUserDetails(accessToken) {
   try {
     const peopleService = google.people({ version: "v1", auth: accessToken });
@@ -43,14 +42,8 @@ passport.use(
     {
       clientID: process.env.CLIENTID,
       clientSecret: process.env.CLIENTSECRET,
-      callbackURL:"https://watfa-backend.vercel.app/auth/google/callback",
+      callbackURL: "https://watfa-backend.vercel.app/auth/google/callback",
       passReqToCallback: true,
-      scope: [
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/user.phonenumbers.read",
-        "https://www.googleapis.com/auth/user.addresses.read",
-      ],
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
