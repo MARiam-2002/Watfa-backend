@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import session from "express-session";
 
 export const bootstrap = (app, express) => {
   if (process.env.NODE_ENV == "dev") {
@@ -39,8 +40,23 @@ export const bootstrap = (app, express) => {
   //   })
   // );
   
-  // تفعيل passport، إذا كنت بحاجة لاستخدام passport مع JWT فقط، لا حاجة لتفعيل الجلسات
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production", // true إذا كنت تستخدم HTTPS
+        httpOnly: true, // لمنع الوصول إليها من خلال JavaScript
+        maxAge: 1000 * 60 * 60 * 24, // عمر الكوكيز (مثال: يوم واحد)
+      },
+    })
+  );
+  
+  // تفعيل Passport مع الجلسات
   app.use(passport.initialize());
+  app.use(passport.session()); // تفعيل الجلسات مع Passport
+  
 
   // إضافة وظيفة للتحقق من التوكن JWT على المسارات المحمية
   app.use((req, res, next) => {
