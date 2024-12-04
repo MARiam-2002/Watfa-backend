@@ -86,15 +86,16 @@ passport.use(
           { expiresIn: "1h" }
         );
 
-        // إرسال التوكن إلى العميل
-        res.json({ token }); // إرسال التوكن في استجابة JSON
-        done(null, user);
+        // إرجاع المستخدم بعد المصادقة مع التوكن
+        done(null, user); // لا تستخدم res هنا
+
       } catch (error) {
-        console.error("Error in Google strategy: ", error.message); // تسجيل الخطأ
-        done(error, null); // إرسال الخطأ إلى Passport
+        console.error("Error in Google strategy: ", error.message);
+        done(error, null); // ارسال الخطأ إلى Passport وليس استخدام res
       }
     }
   )
 );
+
 
 export default passport;

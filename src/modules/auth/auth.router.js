@@ -99,9 +99,8 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }), // يمكن إضافة توجيه خاص بالفشل مثل: failureRedirect: "/auth/error"
+  passport.authenticate("google", { failureRedirect: "/login" }), // فشل التوجيه
   (req, res) => {
-    // توليد التوكن JWT
     const token = jwt.sign(
       {
         id: req.user._id,
@@ -110,7 +109,7 @@ router.get(
         role: req.session.role || "buyer", // التحقق من وجود دور في الجلسة
       },
       process.env.TOKEN_KEY, // تأكد من تعيين هذا المفتاح في متغيرات البيئة
-      { expiresIn: "1h" } // إضافة مدة صلاحية للتوكن
+      { expiresIn: "1h" } // مدة صلاحية التوكن
     );
 
     // إرجاع الـ user مع الـ token
@@ -128,5 +127,6 @@ router.get(
     });
   }
 );
+
 
 export default router;
