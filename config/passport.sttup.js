@@ -43,13 +43,12 @@ passport.use(
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
-        // تحديد الدور الافتراضي (buyer) إذا لم يتم تحديده
         const role = req.session?.role || "buyer";
 
         // جلب بيانات إضافية (رقم الهاتف والدولة)
         const { phoneNumber, country } = await getUserDetails(accessToken);
 
-        // البحث عن المستخدم في قاعدة البيانات
+        // البحث عن المستخدم باستخدام await بدلاً من callback
         let user = await userModel.findOne({
           $or: [
             { googleId: profile.id },
@@ -58,18 +57,18 @@ passport.use(
           ],
         });
 
-        // إذا لم يتم العثور على المستخدم، قم بإنشاء مستخدم جديد
         if (!user) {
+          // إذا لم يتم العثور على المستخدم، قم بإنشاء مستخدم جديد
           user = new userModel({
             googleId: profile.id,
             userName: profile.displayName,
             email: profile.emails[0].value,
-            phoneNumber, // حفظ رقم الهاتف
-            country, // حفظ الدولة
-            role, // حفظ الدور
+            phoneNumber,
+            country,
+            role,
           });
 
-          await user.save();
+          await user.save(); // تأكد من أن المستخدم تم حفظه
         }
 
         // توليد التوكن JWT
@@ -87,10 +86,10 @@ passport.use(
         );
 
         // إرجاع المستخدم بعد المصادقة مع التوكن
-        return done(null, user);
+        done(null, user);
       } catch (error) {
         console.error("Error in Google strategy: ", error.message);
-        return done(error, null); // ارسال الخطأ إلى Passport وليس استخدام res
+        done(error, null); // ارسال الخطأ إلى Passport
       }
     }
   )
