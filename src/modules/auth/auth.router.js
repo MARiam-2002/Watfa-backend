@@ -20,6 +20,8 @@ router.post(
   userController.login
 );
 
+router.post("/login-with-fingerprint", isAuthenticated, userController.fingerprint);
+
 router.patch(
   "/forgetCode",
   isAuthenticated,
@@ -72,6 +74,8 @@ router.get(
       data: {
         email: req.user.email,
         userName: req.user.userName,
+        phone: req.user.phoneNumber || "Phone number not available",
+        country: req.user.country || "Country not available",
         role: req.user.role,
         token,
       },
@@ -92,7 +96,7 @@ router.get(
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/user.phonenumbers.read", // صلاحية رقم الهاتف
-      "https://www.googleapis.com/auth/user.addresses.read",  // صلاحية العنوان
+      "https://www.googleapis.com/auth/user.addresses.read", // صلاحية العنوان
     ],
   })
 );
@@ -128,7 +132,5 @@ router.get(
     });
   }
 );
-
-
 
 export default router;

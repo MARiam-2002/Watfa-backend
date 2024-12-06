@@ -28,7 +28,9 @@ export const register = asyncHandler(async (req, res, next) => {
   });
 
   if (isUser) {
-  return res.status(400).json({ success: false, message: "Email or userName already exists!" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Email or userName already exists!" });
   }
 
   if (password !== confirmPassword) {
@@ -83,7 +85,7 @@ export const register = asyncHandler(async (req, res, next) => {
       email: user.email,
       userName: user.userName,
       phone: user.phoneNumber,
-      country:user.country,
+      country: user.country,
       role,
       token,
     },
@@ -133,8 +135,8 @@ export const login = asyncHandler(async (req, res, next) => {
     data: {
       email: user.email,
       userName: user.userName,
-      phone: user.phoneNumber,  
-      country:user.country,
+      phone: user.phoneNumber,
+      country: user.country,
       role: user.role,
       token,
     },
@@ -210,21 +212,43 @@ export const resetPasswordByCode = asyncHandler(async (req, res, next) => {
   return res.status(200).json({ success: true, message: "Try to login!" });
 });
 
-  export const allCountryWithFlag = asyncHandler((req, res, next) => {
-  
-    const gulfCountriesCodes = ["BH", "KW", "OM", "QA", "SA", "AE"];
-  
-    const gulfCountriesData = gulfCountriesCodes.map((code) => ({
-      name: countries[code].name,
-      code: code,
-      phone: `+${countries[code].phone}`,
-      flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
-    }));
-  
-    return res.json({
-      success: true,
-      message: "Gulf Countries with flags",
-      data: gulfCountriesData,
-    });
+export const allCountryWithFlag = asyncHandler((req, res, next) => {
+  const gulfCountriesCodes = ["BH", "KW", "OM", "QA", "SA", "AE"];
+
+  const gulfCountriesData = gulfCountriesCodes.map((code) => ({
+    name: countries[code].name,
+    code: code,
+    phone: `+${countries[code].phone}`,
+    flag: `https://flagcdn.com/w320/${code.toLowerCase()}.png`,
+  }));
+
+  return res.json({
+    success: true,
+    message: "Gulf Countries with flags",
+    data: gulfCountriesData,
   });
-  
+});
+
+export const fingerprint = asyncHandler(async (req, res) => {
+  const { isFingerprintAuth} = req.body;
+
+  if (isFingerprintAuth) {
+    return res.status(200).json({
+      success: true,
+      message: "Login with your fingerprint successful.",
+      data: {
+        email: req.user.email,
+        userName: req.user.userName,
+        phone: req.user.phoneNumber,
+        country: req.user.country,
+        role: req.user.role,
+        token:req.headers["token"],
+      },
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      message: "Invalid fingerprint authentication.",
+    });
+  }
+});
