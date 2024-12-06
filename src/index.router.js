@@ -90,11 +90,6 @@ export const bootstrap = (app, express) => {
     return next(new Error("not found page", { cause: 404 }));
   });
 
-  // معالجة الأخطاء
-  app.use((error, req, res, next) => {
-    return res.json({ message: error.message, stack: error.stack });
-  });
-
   // إضافة التعامل مع الأخطاء العالمية (كما هو معرف في asyncHandler.js)
   app.use(globalErrorHandling);
 };
