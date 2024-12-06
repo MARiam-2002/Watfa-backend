@@ -100,14 +100,18 @@ export const login = asyncHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    return next(new Error("Invalid  Email. Please try again.", { cause: 400 }));
-  }
+    return res.status(404).json({
+      success: false,
+      message: "User not found. Please register.",
+      });
+    }
 
   const isPasswordValid = bcryptjs.compareSync(password, user.password);
   if (!isPasswordValid) {
-    return next(
-      new Error("Invalid Password. Please try again.", { cause: 400 })
-    );
+    return res.status(400).json({
+      success: false,
+      message: "Invalid password!",
+    });
   }
 
   const token = jwt.sign(
