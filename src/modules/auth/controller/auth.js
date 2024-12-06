@@ -108,10 +108,9 @@ export const login = asyncHandler(async (req, res, next) => {
 
   const isPasswordValid = bcryptjs.compareSync(password, user.password);
   if (!isPasswordValid) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid password!",
-    });
+    return next(
+      new Error("Invalid Password. Please try again.", { cause: 400 })
+    );
   }
 
   const token = jwt.sign(
