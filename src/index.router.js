@@ -1,11 +1,4 @@
 import authRouter from "./modules/auth/auth.router.js";
-import categoryRouter from "./modules/category/category.router.js";
-import subCategoryRouter from "./modules/subcategory/subcategory.router.js";
-import productRouter from "./modules/product/product.router.js";
-import couponRouter from "./modules/coupon/coupon.router.js";
-import cartRouter from "./modules/cart/cart.router.js";
-import orderRouter from "./modules/order/order.router.js";
-import aboutRouter from "./modules/about/about.router.js";
 import { globalErrorHandling } from "./utils/asyncHandler.js";
 import cors from "cors";
 import morgan from "morgan";
@@ -46,21 +39,19 @@ export const bootstrap = (app, express) => {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === "production", // true إذا كنت تستخدم HTTPS
-        httpOnly: true, // لمنع الوصول إليها من خلال JavaScript
-        maxAge: 1000 * 60 * 60 * 24, // عمر الكوكيز (مثال: يوم واحد)
+        secure: process.env.NODE_ENV === "production", 
+        httpOnly: true, 
+        maxAge: 1000 * 60 * 60 * 24, 
       },
     })
   );
   
-  // تفعيل Passport مع الجلسات
   app.use(passport.initialize());
-  app.use(passport.session()); // تفعيل الجلسات مع Passport
+  app.use(passport.session()); 
   
 
-  // إضافة وظيفة للتحقق من التوكن JWT على المسارات المحمية
   app.use((req, res, next) => {
-    const token = req.headers["authorization"]?.split(" ")[1]; // الحصول على التوكن من الرأس
+    const token = req.headers["authorization"]?.split(" ")[1]; 
     if (token) {
       jwt.verify(token, process.env.TOKEN_KEY, (err, decoded) => {
         if (err) {
@@ -74,22 +65,12 @@ export const bootstrap = (app, express) => {
     }
   });
 
-  // إضافة المسارات
   app.use("/auth", authRouter);
-  app.use("/category", categoryRouter);
-  app.use("/subCategory", subCategoryRouter);
-  app.use("/product", productRouter);
-  app.use("/about", aboutRouter);
-  app.use("/coupon", couponRouter);
-  app.use("/cart", cartRouter);
-  app.use("/order", orderRouter);
+ 
 
-  // مسار غير موجود
   app.all("*", (req, res, next) => {
-    console.log(3);
     return next(new Error("not found page", { cause: 404 }));
   });
 
-  // إضافة التعامل مع الأخطاء العالمية (كما هو معرف في asyncHandler.js)
   app.use(globalErrorHandling);
 };

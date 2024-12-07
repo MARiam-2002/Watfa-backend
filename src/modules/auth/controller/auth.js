@@ -8,7 +8,7 @@ import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
 // import randomstring from "randomstring";
 // import cartModel from "../../../../DB/models/cart.model.js";
-import cloudinary from "../../../utils/cloud.js";
+// import cloudinary from "../../../utils/cloud.js";
 import { countries } from "countries-list";
 
 export const register = asyncHandler(async (req, res, next) => {
