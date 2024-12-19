@@ -20,7 +20,11 @@ router.post(
   userController.login
 );
 
-router.post("/login-with-fingerprint", isAuthenticated, userController.fingerprint);
+router.post(
+  "/login-with-fingerprint",
+  isAuthenticated,
+  userController.fingerprint
+);
 
 router.patch(
   "/forgetCode",
@@ -132,5 +136,7 @@ router.get(
     });
   }
 );
+
+router.patch("/update-profile", isAuthenticated, userController.updateUser);
 
 export default router;
