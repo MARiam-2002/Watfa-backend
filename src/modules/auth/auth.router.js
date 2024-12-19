@@ -6,6 +6,7 @@ import { isAuthenticated } from "../../middleware/authentication.middleware.js";
 import passportFace from "../../../config/passport.facebook.js";
 import passport from "../../../config/passport.sttup.js";
 import jwt from "jsonwebtoken";
+import { filterObject, fileUpload } from "../../utils/multer.js";
 const router = Router();
 
 router.post(
@@ -137,6 +138,11 @@ router.get(
   }
 );
 
-router.patch("/update-profile", isAuthenticated, userController.updateUser);
+router.patch(
+  "/update-profile",
+  isAuthenticated,
+  fileUpload(filterObject.image).single("profileImage"),
+  userController.updateUser
+);
 
 export default router;
