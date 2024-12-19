@@ -71,8 +71,16 @@ const cardSchema = new mongoose.Schema(
 
 cardSchema.pre("save", function (next) {
     if (this.isModified("cardNumber")) {
+      if (!this.cardNumber || this.cardNumber.length < 4) {
+        return next(new Error("Card number is invalid or too short"));
+      }
+  
       this.last4 = this.cardNumber.slice(-4);
   
+      // تشفير الرقم بعد استخراج last4
+      this.cardNumber = encrypt(this.cardNumber);
+  
+      // تحديد نوع البطاقة باستخدام الأرقام الأولى
       const firstDigit = this.cardNumber[0];
       if (firstDigit === "4") {
         this.cardType = "Visa";
@@ -83,8 +91,6 @@ cardSchema.pre("save", function (next) {
       } else {
         this.cardType = "Other";
       }
-  
-      this.cardNumber = encrypt(this.cardNumber);
     }
   
     if (this.isModified("cvc")) {
@@ -93,6 +99,7 @@ cardSchema.pre("save", function (next) {
   
     next();
   });
+  
   
 
 
