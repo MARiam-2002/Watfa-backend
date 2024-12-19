@@ -6,10 +6,8 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../../../utils/sendEmails.js";
 import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
-// import randomstring from "randomstring";
-// import cartModel from "../../../../DB/models/cart.model.js";bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-// import cloudinary from "../../../utils/cloud.js";
 import { countries } from "countries-list";
+import cloudinary from "../../../utils/cloud.js";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
