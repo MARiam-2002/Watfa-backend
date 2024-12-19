@@ -50,7 +50,12 @@ const userSchema = new Schema(
       default: "buyer",
     },
     wishlist: [Types.ObjectId],
-
+    cards: [
+      {
+        type: Types.ObjectId,
+        ref: "Card",
+      },
+    ],
     forgetCode: String,
     activationCode: String,
     profileImage: {

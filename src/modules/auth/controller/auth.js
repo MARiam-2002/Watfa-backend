@@ -1,7 +1,7 @@
 import userModel from "../../../../DB/models/user.model.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
 import bcryptjs from "bcryptjs";
-import crypto from "crypto";
+import crypto, { randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../../../utils/sendEmails.js";
 import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
@@ -319,5 +319,59 @@ export const updateUser = asyncHandler(async (req, res, next) => {
       country: updatedUser.country,
       profileImage: updatedUser.profileImage,
     },
+  });
+});
+
+export const addCardForUser = asyncHandler(async (req, res, next) => {
+  const { userId } = req.user._id;
+  const { cardHolderName, cardNumber, expireDate, cvc } = req.body;
+
+  const isCardExist = await cardModel.findOne({ cardNumber });
+  if (isCardExist) {
+    return next(
+      new Error("Card with this number already exists!", { cause: 400 })
+    );
+  }
+
+  const newCard = new cardModel({
+    cardHolderName,
+    cardNumber,
+    expireDate,
+    cvc,
+  });
+  await newCard.save();
+
+  const user = await userModel.findById(userId);
+  if (!user) {
+    return next(new Error("User not found!", { cause: 404 }));
+  }
+
+  user.cards.push(newCard._id);
+  await user.save();
+
+  return res.status(201).json({
+    success: true,
+    message: "Card added successfully!",
+    data: {
+      cardHolderName: newCard.cardHolderName,
+      last4: newCard.last4,
+      cardType: newCard.cardType,
+    },
+  });
+});
+
+export const getCardsForUser = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id; 
+
+  const user = await userModel.findById(userId).populate("cards", "cardHolderName last4 cardType"); // جلب الحقول فقط
+
+  if (!user) {
+    return next(new Error("User not found!", { cause: 404 }));
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "User cards retrieved successfully!",
+    data: user.cards,
   });
 });

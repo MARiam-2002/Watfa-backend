@@ -145,4 +145,12 @@ router.patch(
   userController.updateUser
 );
 
+router.post(
+  "/add-cards",
+  isAuthenticated,
+  isValidation(Validators.cardValidationSchema),
+  userController.addCardForUser
+);
+
+router.get("/cards", isAuthenticated, userController.getCardsForUser);
 export default router;

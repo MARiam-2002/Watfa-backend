@@ -139,3 +139,53 @@ export const verify = joi
       .messages(defaultMessages),
   })
   .required();
+  export const cardValidationSchema = joi
+  .object({
+    cardHolderName: joi
+      .string()
+      .required()
+      .min(3)
+      .max(100)
+      .label("Card Holder Name")
+      .messages({
+        ...defaultMessages,
+        "string.base": "Card holder name must be a string.",
+        "string.empty": "Card holder name cannot be empty.",
+        "string.min": "Card holder name must be at least {#limit} characters long.",
+        "string.max": "Card holder name must be at most {#limit} characters long.",
+      }),
+
+    cardNumber: joi
+      .string()
+      .required()
+      .creditCard()
+      .label("Card Number")
+      .messages({
+        ...defaultMessages,
+        "string.empty": "Card number cannot be empty.",
+        "string.pattern.base": "Card number must be a valid credit card number.",
+      }),
+
+    expireDate: joi
+      .string()
+      .required()
+      .pattern(/^(0[1-9]|1[0-2])\/[0-9]{2}$/)
+      .label("Expiration Date (MM/YY)")
+      .messages({
+        ...defaultMessages,
+        "string.empty": "Expiration date cannot be empty.",
+        "string.pattern.base": "Expiration date must follow MM/YY format.",
+      }),
+
+    cvc: joi
+      .string()
+      .required()
+      .pattern(/^[0-9]{3,4}$/)
+      .label("CVC")
+      .messages({
+        ...defaultMessages,
+        "string.empty": "CVC cannot be empty.",
+        "string.pattern.base": "CVC must be 3 or 4 digits.",
+      }),
+  })
+  .required();
