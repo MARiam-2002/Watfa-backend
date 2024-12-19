@@ -72,24 +72,28 @@ const cardSchema = new mongoose.Schema(
 cardSchema.pre("save", function (next) {
     if (this.isModified("cardNumber")) {
       this.last4 = this.cardNumber.slice(-4);
-      this.cardNumber = encrypt(this.cardNumber);
   
-      // Determine card type based on the last 4 digits
-      if (this.last4.startsWith("4")) {
+      const firstDigit = this.cardNumber[0];
+      if (firstDigit === "4") {
         this.cardType = "Visa";
-      } else if (this.last4.startsWith("5")) {
+      } else if (firstDigit === "5") {
         this.cardType = "MasterCard";
-      } else if (this.last4.startsWith("3")) {
+      } else if (firstDigit === "3") {
         this.cardType = "American Express";
       } else {
         this.cardType = "Other";
       }
+  
+      this.cardNumber = encrypt(this.cardNumber);
     }
+  
     if (this.isModified("cvc")) {
       this.cvc = encrypt(this.cvc);
     }
+  
     next();
   });
+  
 
 
 
