@@ -75,18 +75,18 @@ cardSchema.pre("save", function (next) {
         return next(new Error("Card number is invalid or too short"));
       }
   
+      // تعيين last4 قبل التشفير
       this.last4 = this.cardNumber.slice(-4);
   
-      // تشفير الرقم بعد استخراج last4
+      // تشفير cardNumber
       this.cardNumber = encrypt(this.cardNumber);
   
-      // تحديد نوع البطاقة باستخدام الأرقام الأولى
-      const firstDigit = this.cardNumber[0];
-      if (firstDigit === "4") {
+      // تحديد نوع البطاقة بناءً على الأرقام
+      if (this.cardNumber.startsWith("4")) {
         this.cardType = "Visa";
-      } else if (firstDigit === "5") {
+      } else if (this.cardNumber.startsWith("5")) {
         this.cardType = "MasterCard";
-      } else if (firstDigit === "3") {
+      } else if (this.cardNumber.startsWith("3")) {
         this.cardType = "American Express";
       } else {
         this.cardType = "Other";
