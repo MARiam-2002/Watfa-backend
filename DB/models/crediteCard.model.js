@@ -73,8 +73,10 @@ cardSchema.pre("save", function (next) {
       return next(new Error("Card number is invalid or too short"));
     }
 
+    // استخراج آخر 4 أرقام قبل التشفير
     this.last4 = this.cardNumber.slice(-4);
 
+    // تحديد نوع البطاقة بناءً على الأرقام الأولى
     if (this.cardNumber.startsWith("4")) {
       this.cardType = "Visa";
     } else if (this.cardNumber.startsWith("5")) {
@@ -85,15 +87,22 @@ cardSchema.pre("save", function (next) {
       this.cardType = "Other";
     }
 
+    // تشفير cardNumber بعد استخراج النوع والـ last4
     this.cardNumber = encrypt(this.cardNumber);
   }
 
   if (this.isModified("cvc")) {
+    if (!/^[0-9]{3,4}$/.test(this.cvc)) {
+      return next(new Error("CVC must be 3 or 4 digits"));
+    }
+
+    // تشفير CVC
     this.cvc = encrypt(this.cvc);
   }
 
   next();
 });
+
 
 // Model export
 const cardModel =
