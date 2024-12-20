@@ -77,13 +77,14 @@ cardSchema.pre("save", function (next) {
     this.last4 = this.cardNumber.slice(-4);
 
     // تحديد نوع البطاقة بناءً على الأرقام الأولى
-    const firstDigit = this.cardNumber[0];
     if (this.cardNumber.startsWith("4")) {
       this.cardType = "Visa";
     } else if (this.cardNumber.startsWith("5")) {
       this.cardType = "MasterCard";
     } else if (this.cardNumber.startsWith("34") || this.cardNumber.startsWith("37")) {
       this.cardType = "American Express";
+    } else if (this.cardNumber.startsWith("6")) {
+      this.cardType = "Discover";
     } else {
       this.cardType = "Other";
     }
@@ -93,14 +94,13 @@ cardSchema.pre("save", function (next) {
   }
 
   if (this.isModified("cvc")) {
-   
-
     // تشفير CVC
     this.cvc = encrypt(this.cvc);
   }
 
   next();
 });
+
 
 
 
