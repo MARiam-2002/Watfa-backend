@@ -63,7 +63,6 @@ const cardSchema = new mongoose.Schema(
     cvc: {
       type: String,
       required: [true, "CVC is required"],
-      match: [/^[0-9]{3,4}$/, "CVC must be 3 or 4 digits"],
     },
   },
   { timestamps: true }
