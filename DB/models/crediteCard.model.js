@@ -69,6 +69,9 @@ const cardSchema = new mongoose.Schema(
 );
 cardSchema.pre("save", function (next) {
   if (this.isModified("cardNumber")) {
+    // إزالة المسافات أو الرموز غير المرغوب فيها
+    this.cardNumber = this.cardNumber.replace(/\s+/g, '');  // إزالة أي مسافات
+
     if (!this.cardNumber || this.cardNumber.length < 4) {
       return next(new Error("Card number is invalid or too short"));
     }
