@@ -324,14 +324,15 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 });
 
 export const addCardForUser = asyncHandler(async (req, res, next) => {
-  const { userId } = req.user._id;
+  const userId = req.user._id;
   const { cardHolderName, cardNumber, expireDate, cvc } = req.body;
 
-  const isCardExist = await cardModel.findOne({ cardNumber });
+  // Encrypt the card number for comparison
+  const encryptedCardNumber = encrypt(cardNumber);
+
+  const isCardExist = await cardModel.findOne({ cardNumber: encryptedCardNumber });
   if (isCardExist) {
-    return next(
-      new Error("Card with this number already exists!", { cause: 400 })
-    );
+    return next(new Error("Card with this number already exists!", { cause: 400 }));
   }
 
   const newCard = new cardModel({
@@ -340,6 +341,7 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     expireDate,
     cvc,
   });
+
   await newCard.save();
 
   const user = await userModel.findById(userId);
@@ -360,6 +362,7 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
 
 export const getCardsForUser = asyncHandler(async (req, res, next) => {
   const userId = req.user._id; 

@@ -68,25 +68,24 @@ const cardSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 cardSchema.pre("save", function (next) {
     if (this.isModified("cardNumber")) {
       if (!this.cardNumber || this.cardNumber.length < 4) {
         return next(new Error("Card number is invalid or too short"));
       }
   
-      // تعيين last4 قبل التشفير
+      // Set last4 before encryption
       this.last4 = this.cardNumber.slice(-4);
   
-      // تشفير cardNumber
+      // Encrypt cardNumber
       this.cardNumber = encrypt(this.cardNumber);
   
-      // تحديد نوع البطاقة بناءً على الأرقام
-      if (this.cardNumber.startsWith("4")) {
+      // Determine cardType based on the original number
+      if (this.last4.startsWith("4")) {
         this.cardType = "Visa";
-      } else if (this.cardNumber.startsWith("5")) {
+      } else if (this.last4.startsWith("5")) {
         this.cardType = "MasterCard";
-      } else if (this.cardNumber.startsWith("3")) {
+      } else if (this.last4.startsWith("3")) {
         this.cardType = "American Express";
       } else {
         this.cardType = "Other";
@@ -99,6 +98,7 @@ cardSchema.pre("save", function (next) {
   
     next();
   });
+  
   
   
 
