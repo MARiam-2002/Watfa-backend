@@ -76,12 +76,13 @@ cardSchema.pre("save", function (next) {
     // استخراج آخر 4 أرقام قبل التشفير
     this.last4 = this.cardNumber.slice(-4);
 
-    // تحديد نوع البطاقة بناءً على الأرقام الأولى
-    if (this.cardNumber.startsWith("4")) {
+    // تحديد نوع البطاقة بناءً على الأرقام الأولى قبل التشفير
+    const firstDigit = this.cardNumber[0];
+    if (firstDigit === "4") {
       this.cardType = "Visa";
-    } else if (this.cardNumber.startsWith("5")) {
+    } else if (firstDigit === "5") {
       this.cardType = "MasterCard";
-    } else if (this.cardNumber.startsWith("3")) {
+    } else if (firstDigit === "3") {
       this.cardType = "American Express";
     } else {
       this.cardType = "Other";
@@ -92,6 +93,7 @@ cardSchema.pre("save", function (next) {
   }
 
   if (this.isModified("cvc")) {
+  
 
     // تشفير CVC
     this.cvc = encrypt(this.cvc);
@@ -99,6 +101,7 @@ cardSchema.pre("save", function (next) {
 
   next();
 });
+
 
 
 // Model export
