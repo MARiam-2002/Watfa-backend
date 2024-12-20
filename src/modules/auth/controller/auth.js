@@ -8,7 +8,7 @@ import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
 import { countries } from "countries-list";
 import cloudinary from "../../../utils/cloud.js";
-import cardModel from "../../../../DB/models/crediteCard.model.js";
+import cardModel, { encrypt } from "../../../../DB/models/crediteCard.model.js";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
@@ -327,8 +327,14 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
   const { cardHolderName, cardNumber, expireDate, cvc } = req.body;
 
-  // Encrypt the card number for comparison
+  if (!cardNumber || cardNumber.length < 4) {
+    return next(new Error("Card number is invalid or too short", { cause: 400 }));
+  }
+
+  const last4 = cardNumber.slice(-4);
+
   const encryptedCardNumber = encrypt(cardNumber);
+  const encryptedCvc = encrypt(cvc);
 
   const isCardExist = await cardModel.findOne({ cardNumber: encryptedCardNumber });
   if (isCardExist) {
@@ -337,9 +343,10 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
 
   const newCard = new cardModel({
     cardHolderName,
-    cardNumber,
+    cardNumber: encryptedCardNumber,
+    last4,
     expireDate,
-    cvc,
+    cvc: encryptedCvc,
   });
 
   await newCard.save();
@@ -362,6 +369,7 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
 
 
 export const getCardsForUser = asyncHandler(async (req, res, next) => {

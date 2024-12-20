@@ -8,7 +8,7 @@ const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, "base64"); // Loa
 const IV_LENGTH = 16;
 
 // Encryption function
-function encrypt(data) {
+export function encrypt(data) {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv("aes-256-cbc", ENCRYPTION_KEY, iv);
   let encrypted = cipher.update(data, "utf8", "hex");
@@ -17,17 +17,17 @@ function encrypt(data) {
 }
 
 // Decryption function
-// function decrypt(encryptedData) {
-//   const [iv, encrypted] = encryptedData.split(":");
-//   const decipher = crypto.createDecipheriv(
-//     "aes-256-cbc",
-//     ENCRYPTION_KEY,
-//     Buffer.from(iv, "hex")
-//   );
-//   let decrypted = decipher.update(encrypted, "hex", "utf8");
-//   decrypted += decipher.final("utf8");
-//   return decrypted;
-// }
+ export function decrypt(encryptedData) {
+  const [iv, encrypted] = encryptedData.split(":");
+  const decipher = crypto.createDecipheriv(
+    "aes-256-cbc",
+    ENCRYPTION_KEY,
+    Buffer.from(iv, "hex")
+  );
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
 
 // Card schema
 const cardSchema = new mongoose.Schema(
