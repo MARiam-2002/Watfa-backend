@@ -63,6 +63,7 @@ const cardSchema = new mongoose.Schema(
     cvc: {
       type: String,
       required: [true, "CVC is required"],
+      match: [/^[0-9]{3,4}$/, "CVC must be 3 or 4 digits"],
     },
   },
   { timestamps: true }
@@ -73,22 +74,19 @@ cardSchema.pre("save", function (next) {
         return next(new Error("Card number is invalid or too short"));
       }
   
-      // Set last4 before encryption
       this.last4 = this.cardNumber.slice(-4);
   
-      // Encrypt cardNumber
-      this.cardNumber = encrypt(this.cardNumber);
-  
-      // Determine cardType based on the original number
-      if (this.last4.startsWith("4")) {
+      if (this.cardNumber.startsWith("4")) {
         this.cardType = "Visa";
-      } else if (this.last4.startsWith("5")) {
+      } else if (this.cardNumber.startsWith("5")) {
         this.cardType = "MasterCard";
-      } else if (this.last4.startsWith("3")) {
+      } else if (this.cardNumber.startsWith("3")) {
         this.cardType = "American Express";
       } else {
         this.cardType = "Other";
       }
+  
+      this.cardNumber = encrypt(this.cardNumber);
     }
   
     if (this.isModified("cvc")) {
@@ -100,7 +98,6 @@ cardSchema.pre("save", function (next) {
   
   
   
-
 
 
 // Model export
