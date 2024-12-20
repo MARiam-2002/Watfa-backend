@@ -17,7 +17,7 @@ export function encrypt(data) {
 }
 
 // Decryption function
- export function decrypt(encryptedData) {
+export function decrypt(encryptedData) {
   const [iv, encrypted] = encryptedData.split(":");
   const decipher = crypto.createDecipheriv(
     "aes-256-cbc",
@@ -68,36 +68,32 @@ const cardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 cardSchema.pre("save", function (next) {
-    if (this.isModified("cardNumber")) {
-      if (!this.cardNumber || this.cardNumber.length < 4) {
-        return next(new Error("Card number is invalid or too short"));
-      }
-  
-      this.last4 = this.cardNumber.slice(-4);
-  
-      if (this.cardNumber.startsWith("4")) {
-        this.cardType = "Visa";
-      } else if (this.cardNumber.startsWith("5")) {
-        this.cardType = "MasterCard";
-      } else if (this.cardNumber.startsWith("3")) {
-        this.cardType = "American Express";
-      } else {
-        this.cardType = "Other";
-      }
-  
-      this.cardNumber = encrypt(this.cardNumber);
+  if (this.isModified("cardNumber")) {
+    if (!this.cardNumber || this.cardNumber.length < 4) {
+      return next(new Error("Card number is invalid or too short"));
     }
-  
-    if (this.isModified("cvc")) {
-      this.cvc = encrypt(this.cvc);
-    }
-  
-    next();
-  });
-  
-  
-  
 
+    this.last4 = this.cardNumber.slice(-4);
+
+    if (this.cardNumber.startsWith("4")) {
+      this.cardType = "Visa";
+    } else if (this.cardNumber.startsWith("5")) {
+      this.cardType = "MasterCard";
+    } else if (this.cardNumber.startsWith("3")) {
+      this.cardType = "American Express";
+    } else {
+      this.cardType = "Other";
+    }
+
+    this.cardNumber = encrypt(this.cardNumber);
+  }
+
+  if (this.isModified("cvc")) {
+    this.cvc = encrypt(this.cvc);
+  }
+
+  next();
+});
 
 // Model export
 const cardModel =
