@@ -93,7 +93,7 @@ cardSchema.pre("save", function (next) {
   }
 
   if (this.isModified("cvc")) {
-  
+    
 
     // تشفير CVC
     this.cvc = encrypt(this.cvc);
@@ -101,6 +101,7 @@ cardSchema.pre("save", function (next) {
 
   next();
 });
+
 
 
 
