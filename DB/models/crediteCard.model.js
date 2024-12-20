@@ -92,9 +92,6 @@ cardSchema.pre("save", function (next) {
   }
 
   if (this.isModified("cvc")) {
-    if (!/^[0-9]{3,4}$/.test(this.cvc)) {
-      return next(new Error("CVC must be 3 or 4 digits"));
-    }
 
     // تشفير CVC
     this.cvc = encrypt(this.cvc);
