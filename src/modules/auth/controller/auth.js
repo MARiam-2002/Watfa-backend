@@ -332,46 +332,30 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
   }
 
   // Perform Luhn check on the original card number
-  console.log("Checking card number: ", cardNumber);
   const isValidLuhn = luhnCheck(cardNumber);
   if (!isValidLuhn) {
-    console.log("Card number failed Luhn check");
     return next(new Error("Card number is invalid", { cause: 400 }));
   }
 
-  // Extract last 4 digits of the original card number
-  const last4 = cardNumber.slice(-4);
-
-  // Encrypt card details after validation
-  const encryptedCardNumber = encrypt(cardNumber);
-  const encryptedCvc = encrypt(cvc);
-
-  console.log("Encrypted Card Number: ", encryptedCardNumber);
-  console.log("Encrypted CVC: ", encryptedCvc);
-
-  // Check if card already exists
-  const isCardExist = await cardModel.findOne({ cardNumber: encryptedCardNumber });
-  if (isCardExist) {
-    console.log("Card with this number already exists!");
-    return next(new Error("Card with this number already exists!", { cause: 400 }));
+  // Check if the card number is already in use
+  const isDuplicate = await isCardNumberDuplicate(cardNumber);
+  if (isDuplicate) {
+    return next(new Error("Card number already exists", { cause: 400 }));
   }
 
   // Create a new card object
   const newCard = new cardModel({
     cardHolderName,
-    cardNumber: encryptedCardNumber,
-    last4,
+    cardNumber,
     expireDate,
-    cvc: encryptedCvc,
+    cvc,
   });
 
   await newCard.save();
-  console.log("New Card Saved:", newCard);
 
   // Update user's cards
   const user = await userModel.findById(userId);
   if (!user) {
-    console.log("User not found!");
     return next(new Error("User not found!", { cause: 404 }));
   }
 
@@ -382,18 +366,17 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
   return res.status(201).json({
     success: true,
     message: "Card added successfully!",
-    data: {
+    data: [{
       cardHolderName: newCard.cardHolderName,
       last4: newCard.last4,
       cardType: newCard.cardType,
-    },
+    }],
   });
 });
-
 export const getCardsForUser = asyncHandler(async (req, res, next) => {
   const userId = req.user._id; 
 
-  const user = await userModel.findById(userId).populate("cards", "cardHolderName last4 cardType"); // جلب الحقول فقط
+  const user = await userModel.findById(userId).populate("cards", "cardHolderName last4 cardType -_id"); // جلب الحقول فقط
 
   if (!user) {
     return next(new Error("User not found!", { cause: 404 }));

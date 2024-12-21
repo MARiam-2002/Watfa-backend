@@ -6,11 +6,7 @@ dotenv.config();
 const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, "base64"); // Load the key from .env
 const IV_LENGTH = 16;
 
-
-
-
 // Luhn Algorithm for card number validation
-// Luhn Check Function
 export function luhnCheck(cardNumber) {
   let sum = 0;
   let shouldDouble = false;
@@ -26,7 +22,6 @@ export function luhnCheck(cardNumber) {
   }
   return sum % 10 === 0; // Return true if the sum is divisible by 10
 }
-
 
 // Encryption function
 export function encrypt(data) {
@@ -49,9 +44,6 @@ export function decrypt(encryptedData) {
   decrypted += decipher.final("utf8");
   return decrypted;
 }
-
-
-// Card schema
 
 // Card schema
 const cardSchema = new mongoose.Schema(
@@ -93,14 +85,23 @@ const cardSchema = new mongoose.Schema(
 );
 
 // Card schema pre-save hook
-cardSchema.pre("save", function (next) {
+// Card schema pre-save hook
+// Card schema pre-save hook
+cardSchema.pre("save", async function (next) {
   if (this.isModified("cardNumber")) {
     console.log("Checking card number: ", this.cardNumber); // Log the card number
 
+    // تحقق من تكرار الرقم قبل التحقق من صحة الرقم
+    const isDuplicate = await isCardNumberDuplicate(this.cardNumber);
+    if (isDuplicate) {
+      console.log("Card number is duplicate");
+      return next(new Error("Card number is already in use"));
+    }
+
     // تحقق من الرقم باستخدام خوارزمية Luhn قبل التشفير
-    if (!luhnCheck(this.cardNumber)) {
-      console.log("Card number failed Luhn check"); // Log the failure
-      return next(new Error("Card number is invalid"));
+    if (!luhnCheck(this.cardNumber) || this.cardNumber.length < 14 || this.cardNumber.length > 16) {
+      console.log("Card number failed Luhn check or invalid length"); // Log the failure
+      return next(new Error("Invalid card number"));
     }
 
     if (!this.cardNumber || this.cardNumber.length !== 16) {
@@ -139,6 +140,19 @@ cardSchema.pre("save", function (next) {
   next();
 });
 
+
+
+// Check for duplicate card number before saving
+const isCardNumberDuplicate = async function (cardNumber) {
+  // التشفير باستخدام الدالة
+  const encryptedCardNumber = encrypt(cardNumber);
+
+  // البحث في قاعدة البيانات باستخدام الرقم المشفر
+  const cardExists = await cardModel.findOne({ cardNumber: encryptedCardNumber });
+  
+  // إذا كانت البطاقة موجودة في قاعدة البيانات
+  return cardExists !== null; 
+};
 
 // Model export
 const cardModel =
