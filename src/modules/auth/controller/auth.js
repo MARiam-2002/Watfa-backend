@@ -8,7 +8,7 @@ import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
 import { countries } from "countries-list";
 import cloudinary from "../../../utils/cloud.js";
-import cardModel, { encrypt } from "../../../../DB/models/crediteCard.model.js";
+import cardModel, { encrypt, luhnCheck } from "../../../../DB/models/crediteCard.model.js";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
@@ -331,16 +331,32 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     return next(new Error("Card number is invalid or too short", { cause: 400 }));
   }
 
+  // Perform Luhn check on the original card number
+  console.log("Checking card number: ", cardNumber);
+  const isValidLuhn = luhnCheck(cardNumber);
+  if (!isValidLuhn) {
+    console.log("Card number failed Luhn check");
+    return next(new Error("Card number is invalid", { cause: 400 }));
+  }
+
+  // Extract last 4 digits of the original card number
   const last4 = cardNumber.slice(-4);
 
+  // Encrypt card details after validation
   const encryptedCardNumber = encrypt(cardNumber);
   const encryptedCvc = encrypt(cvc);
 
+  console.log("Encrypted Card Number: ", encryptedCardNumber);
+  console.log("Encrypted CVC: ", encryptedCvc);
+
+  // Check if card already exists
   const isCardExist = await cardModel.findOne({ cardNumber: encryptedCardNumber });
   if (isCardExist) {
+    console.log("Card with this number already exists!");
     return next(new Error("Card with this number already exists!", { cause: 400 }));
   }
 
+  // Create a new card object
   const newCard = new cardModel({
     cardHolderName,
     cardNumber: encryptedCardNumber,
@@ -350,15 +366,19 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
   });
 
   await newCard.save();
+  console.log("New Card Saved:", newCard);
 
+  // Update user's cards
   const user = await userModel.findById(userId);
   if (!user) {
+    console.log("User not found!");
     return next(new Error("User not found!", { cause: 404 }));
   }
 
   user.cards.push(newCard._id);
   await user.save();
 
+  // Return response
   return res.status(201).json({
     success: true,
     message: "Card added successfully!",
@@ -369,8 +389,6 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     },
   });
 });
-
-
 
 export const getCardsForUser = asyncHandler(async (req, res, next) => {
   const userId = req.user._id; 

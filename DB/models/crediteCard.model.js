@@ -1,11 +1,32 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, "base64"); // Load the key from .env
 const IV_LENGTH = 16;
+
+
+
+
+// Luhn Algorithm for card number validation
+// Luhn Check Function
+export function luhnCheck(cardNumber) {
+  let sum = 0;
+  let shouldDouble = false;
+  // Traverse the card number from right to left
+  for (let i = cardNumber.length - 1; i >= 0; i--) {
+    let digit = parseInt(cardNumber[i]);
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9; // If the result is greater than 9, subtract 9
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble; // Toggle the shouldDouble flag
+  }
+  return sum % 10 === 0; // Return true if the sum is divisible by 10
+}
+
 
 // Encryption function
 export function encrypt(data) {
@@ -28,6 +49,9 @@ export function decrypt(encryptedData) {
   decrypted += decipher.final("utf8");
   return decrypted;
 }
+
+
+// Card schema
 
 // Card schema
 const cardSchema = new mongoose.Schema(
@@ -67,19 +91,26 @@ const cardSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Card schema pre-save hook
 cardSchema.pre("save", function (next) {
   if (this.isModified("cardNumber")) {
-    // إزالة المسافات أو الرموز غير المرغوب فيها
-    this.cardNumber = this.cardNumber.replace(/\s+/g, '');  // إزالة أي مسافات
+    console.log("Checking card number: ", this.cardNumber); // Log the card number
 
-    if (!this.cardNumber || this.cardNumber.length < 4) {
-      return next(new Error("Card number is invalid or too short"));
+    // تحقق من الرقم باستخدام خوارزمية Luhn قبل التشفير
+    if (!luhnCheck(this.cardNumber)) {
+      console.log("Card number failed Luhn check"); // Log the failure
+      return next(new Error("Card number is invalid"));
+    }
+
+    if (!this.cardNumber || this.cardNumber.length !== 16) {
+      return next(new Error("Card number must be exactly 16 digits"));
     }
 
     // استخراج آخر 4 أرقام قبل التشفير
     this.last4 = this.cardNumber.slice(-4);
 
-    // تحديد نوع البطاقة بناءً على الأرقام الأولى
+    // تحديد نوع البطاقة بناءً على الأرقام الأولى (أو استخدام مكتبة للقيام بذلك)
     if (this.cardNumber.startsWith("4")) {
       this.cardType = "Visa";
     } else if (this.cardNumber.startsWith("5")) {
@@ -88,6 +119,10 @@ cardSchema.pre("save", function (next) {
       this.cardType = "American Express";
     } else if (this.cardNumber.startsWith("6")) {
       this.cardType = "Discover";
+    } else if (this.cardNumber.startsWith("6011") || this.cardNumber.startsWith("65")) {
+      this.cardType = "Discover";
+    } else if (this.cardNumber.startsWith("3")) {
+      this.cardType = "Diners Club";
     } else {
       this.cardType = "Other";
     }
@@ -103,10 +138,6 @@ cardSchema.pre("save", function (next) {
 
   next();
 });
-
-
-
-
 
 
 // Model export
