@@ -45,6 +45,17 @@ export function decrypt(encryptedData) {
   return decrypted;
 }
 
+// دالة للتحقق من تكرار رقم البطاقة
+const isCardNumberDuplicate = async function (cardNumber) {
+  const cards = await cardModel.find();
+  for (const card of cards) {
+    if (decrypt(card.cardNumber) === cardNumber) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // Card schema
 const cardSchema = new mongoose.Schema(
   {
@@ -84,51 +95,43 @@ const cardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Card schema pre-save hook
-// Card schema pre-save hook
-// Card schema pre-save hook
 cardSchema.pre("save", async function (next) {
   if (this.isModified("cardNumber")) {
-    console.log("Checking card number: ", this.cardNumber); // Log the card number
-
-    // تحقق من تكرار الرقم قبل التحقق من صحة الرقم
-    const isDuplicate = await isCardNumberDuplicate(this.cardNumber);
-    if (isDuplicate) {
-      console.log("Card number is duplicate");
-      return next(new Error("Card number is already in use"));
-    }
-
     // تحقق من الرقم باستخدام خوارزمية Luhn قبل التشفير
-    if (!luhnCheck(this.cardNumber) || this.cardNumber.length < 14 || this.cardNumber.length > 16) {
-      console.log("Card number failed Luhn check or invalid length"); // Log the failure
+    if (
+      !luhnCheck(this.cardNumber) ||
+      this.cardNumber.length < 14 ||
+      this.cardNumber.length > 16
+    ) {
       return next(new Error("Invalid card number"));
     }
 
-    if (!this.cardNumber || this.cardNumber.length !== 16) {
-      return next(new Error("Card number must be exactly 16 digits"));
+    // تحقق من عدم تكرار رقم البطاقة
+    const isDuplicate = await isCardNumberDuplicate(this.cardNumber);
+    if (isDuplicate) {
+      return next(new Error("Card number is already in use"));
     }
 
     // استخراج آخر 4 أرقام قبل التشفير
     this.last4 = this.cardNumber.slice(-4);
 
-    // تحديد نوع البطاقة بناءً على الأرقام الأولى (أو استخدام مكتبة للقيام بذلك)
+    // تحديد نوع البطاقة
     if (this.cardNumber.startsWith("4")) {
       this.cardType = "Visa";
     } else if (this.cardNumber.startsWith("5")) {
       this.cardType = "MasterCard";
     } else if (this.cardNumber.startsWith("34") || this.cardNumber.startsWith("37")) {
       this.cardType = "American Express";
-    } else if (this.cardNumber.startsWith("6")) {
-      this.cardType = "Discover";
-    } else if (this.cardNumber.startsWith("6011") || this.cardNumber.startsWith("65")) {
-      this.cardType = "Discover";
-    } else if (this.cardNumber.startsWith("3")) {
+    } else if (this.cardNumber.startsWith("30") || this.cardNumber.startsWith("36") || this.cardNumber.startsWith("38")) {
       this.cardType = "Diners Club";
     } else {
       this.cardType = "Other";
     }
+    
+    
+    
 
-    // تشفير cardNumber بعد استخراج النوع والـ last4
+    // تشفير الرقم بعد استخراج الـ last4
     this.cardNumber = encrypt(this.cardNumber);
   }
 
@@ -139,20 +142,6 @@ cardSchema.pre("save", async function (next) {
 
   next();
 });
-
-
-
-// Check for duplicate card number before saving
-const isCardNumberDuplicate = async function (cardNumber) {
-  // التشفير باستخدام الدالة
-  const encryptedCardNumber = encrypt(cardNumber);
-
-  // البحث في قاعدة البيانات باستخدام الرقم المشفر
-  const cardExists = await cardModel.findOne({ cardNumber: encryptedCardNumber });
-  
-  // إذا كانت البطاقة موجودة في قاعدة البيانات
-  return cardExists !== null; 
-};
 
 // Model export
 const cardModel =

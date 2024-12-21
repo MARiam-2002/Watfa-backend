@@ -337,11 +337,8 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     return next(new Error("Card number is invalid", { cause: 400 }));
   }
 
-  // Check if the card number is already in use
-  const isDuplicate = await isCardNumberDuplicate(cardNumber);
-  if (isDuplicate) {
-    return next(new Error("Card number already exists", { cause: 400 }));
-  }
+  // Extract last 4 digits
+  const last4Digits = cardNumber.slice(-4);
 
   // Create a new card object
   const newCard = new cardModel({
@@ -349,6 +346,7 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
     cardNumber,
     expireDate,
     cvc,
+    last4: last4Digits, // Set explicitly
   });
 
   await newCard.save();
@@ -366,13 +364,16 @@ export const addCardForUser = asyncHandler(async (req, res, next) => {
   return res.status(201).json({
     success: true,
     message: "Card added successfully!",
-    data: [{
-      cardHolderName: newCard.cardHolderName,
-      last4: newCard.last4,
-      cardType: newCard.cardType,
-    }],
+    data: [
+      {
+        cardHolderName: newCard.cardHolderName,
+        last4: newCard.last4,
+        cardType: newCard.cardType,
+      },
+    ],
   });
 });
+
 export const getCardsForUser = asyncHandler(async (req, res, next) => {
   const userId = req.user._id; 
 
