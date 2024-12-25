@@ -10,6 +10,10 @@ const tokenSchema = new Schema(
       type: Types.ObjectId,
       ref: "User",
     },
+    seller: {
+      type: Types.ObjectId,
+      ref: "Seller",
+    },
     isValid: {
       type: Boolean,
       default: true,

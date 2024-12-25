@@ -1,4 +1,6 @@
 import authRouter from "./modules/auth/auth.router.js";
+import sellerRouter from "./modules/seller/seller.router.js";
+import productRouter from "./modules/product/product.router.js";
 import { globalErrorHandling } from "./utils/asyncHandler.js";
 import cors from "cors";
 import morgan from "morgan";
@@ -66,6 +68,8 @@ export const bootstrap = (app, express) => {
   });
 
   app.use("/auth", authRouter);
+  app.use("/seller", sellerRouter); 
+  app.use("/product", productRouter); 
  
 
   app.all("*", (req, res, next) => {

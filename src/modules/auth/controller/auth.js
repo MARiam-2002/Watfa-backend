@@ -15,10 +15,8 @@ export const register = asyncHandler(async (req, res, next) => {
     email,
     userName,
     password,
-    confirmPassword,
     phoneNumber,
     role,
-    companyName,
     country,
   } = req.body;
 
@@ -32,19 +30,7 @@ export const register = asyncHandler(async (req, res, next) => {
       .json({ success: false, message: "Email or userName already exists!" });
   }
 
-  if (password !== confirmPassword) {
-    return next(new Error("Passwords do not match!", { cause: 400 }));
-  }
 
-  if (!["buyer", "seller"].includes(role)) {
-    return next(new Error("Invalid role provided!", { cause: 400 }));
-  }
-
-  if (role === "seller" && !companyName) {
-    return next(
-      new Error("Company name is required for sellers!", { cause: 400 })
-    );
-  }
 
   const hashPassword = bcryptjs.hashSync(
     password,
@@ -85,7 +71,7 @@ export const register = asyncHandler(async (req, res, next) => {
       userName: user.userName,
       phone: user.phoneNumber,
       country: user.country,
-      role,
+      role: user.role,
       token,
     },
   });
