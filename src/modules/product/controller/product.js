@@ -1,29 +1,27 @@
 import axios from "axios";
 import sellerModel from "../../../../DB/models/seller.model.js";
 import productModel from "../../../../DB/models/product.model.js";
+
+
 export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
   const { sellerId, platformName, storeURL } = req.body;
 
-  // Verify seller existence
+  // التحقق من وجود البائع
   const seller = await sellerModel.findById(sellerId);
   if (!seller) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Seller not found." });
+    return res.status(404).json({ success: false, message: "Seller not found." });
   }
 
-  // Find the connected platform
+  // البحث عن المنصة المتصلة
   const platform = seller.profileDetails.platforms.find(
     (p) => p.platformName === platformName && p.storeURL === storeURL
   );
 
   if (!platform) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Platform not connected." });
+    return res.status(404).json({ success: false, message: "Platform not connected." });
   }
 
-  // Fetch products based on the platform
+  // جلب المنتجات بناءً على نوع المنصة
   let products = [];
   switch (platformName) {
     case "Shopify":
@@ -39,15 +37,13 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
       products = await fetchWooCommerceProducts(platform);
       break;
     default:
-      return res
-        .status(400)
-        .json({ success: false, message: "Unsupported platform." });
+      return res.status(400).json({ success: false, message: "Unsupported platform." });
   }
 
-  // Save products to the database
+  // حفظ المنتجات في قاعدة البيانات
   const savedProducts = await Promise.all(
     products.map(async (product) => {
-      // Avoid duplicate products
+      // تجنب تكرار المنتجات
       const existingProduct = await productModel.findOne({
         platformProductId: product.id || product.productId,
         sellerId,
@@ -60,8 +56,7 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
         platformProductId: product.id || product.productId,
         title: product.title || product.name,
         description: product.body_html || product.description,
-        price:
-          product.price || (product.variants && product.variants[0]?.price),
+        price: product.price || (product.variants && product.variants[0]?.price),
         currency: product.currency || "SAR",
         stock: product.inventory_quantity || product.stock,
         images: product.images?.map((img) => img.src) || [],
@@ -82,7 +77,7 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
   });
 });
 
-// Helper functions to fetch products from external APIs
+// دوال مساعدة لجلب المنتجات من APIs مختلفة
 const fetchShopifyProducts = asyncHandler(async (platform) => {
   const url = `${platform.storeURL}/admin/api/2024-01/products.json`;
   const response = await axios.get(url, {

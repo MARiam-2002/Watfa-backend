@@ -37,14 +37,24 @@ const bankInfoSchema = new Schema(
   { timestamps: true }
 );
 
-const platformIntegrationSchema = new Schema(
+platformIntegrationSchema = new Schema(
   {
-    platformName: { type: String, required: true },
+    platformName: {
+      type: String,
+      required: true,
+      enum: [
+        "Shopify",
+        "Salla",
+        "WooCommerce",
+        "Direct",
+        "Other", // إضافة خيار "Other" للمنصات غير المعروفة
+      ],
+    },
     storeURL: { type: String, required: true },
     apiKey: { type: String, default: null },
     secretKey: { type: String, default: null },
     accessToken: { type: String, default: null },
-    additionalInfo: { type: Map, of: String }, // لتخزين بيانات إضافية حسب الحاجة
+    additionalInfo: { type: Map, of: String },
   },
   { timestamps: true }
 );

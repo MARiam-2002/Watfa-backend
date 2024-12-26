@@ -108,64 +108,50 @@ export const UpdateSellerProfile = asyncHandler(async (req, res) => {
 });
 
 export const connectPlatform = asyncHandler(async (req, res) => {
-  const { sellerId, platformName, storeURL, apiKey, secretKey, accessToken } =
+  const { sellerId, platformName, storeURL, apiKey, secretKey, accessToken, additionalInfo } =
     req.body;
 
-  // Verify seller existence
+  // التحقق من وجود البائع
   const seller = await sellerModel.findById(sellerId);
   if (!seller) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Seller not found." });
+    return res.status(404).json({ success: false, message: "Seller not found." });
   }
 
-  // Validate required fields for each platform
-  switch (platformName) {
-    case "Shopify":
-    case "Salla":
-      if (!accessToken) {
-        return res.status(400).json({
-          success: false,
-          message: "Access token is required for this platform.",
-        });
-      }
-      break;
-    case "Zid":
-      if (!apiKey) {
-        return res
-          .status(400)
-          .json({ success: false, message: "API key is required for Zid." });
-      }
-      break;
-    case "WooCommerce":
-      if (!apiKey || !secretKey) {
-        return res.status(400).json({
-          success: false,
-          message: "API key and Secret key are required for WooCommerce.",
-        });
-      }
-      break;
-    default:
-      return res
-        .status(400)
-        .json({ success: false, message: "Unsupported platform." });
+  // التحقق من نوع التكامل والحقول المطلوبة
+  if (platformName === "Direct") {
+    if (!apiKey || !secretKey) {
+      return res.status(400).json({
+        success: false,
+        message: "API Key and Secret Key are required for Direct Integration.",
+      });
+    }
+  } else if (platformName === "Other") {
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        message: "accessToken is required for Other Integration.",
+      });
+    }
+  } else {
+    return res.status(400).json({ success: false, message: "Invalid integration type." });
   }
 
-  // Prepare platform data
+  // إعداد بيانات المنصة
   const platformData = {
     platformName,
     storeURL,
     apiKey: apiKey || null,
     secretKey: secretKey || null,
     accessToken: accessToken || null,
+    additionalInfo: additionalInfo || null,
   };
 
-  // Save platform data to seller's profile
+  // حفظ بيانات المنصة في بروفايل البائع
   seller.profileDetails.platforms.push(platformData);
   await seller.save();
 
   return res.status(200).json({
     success: true,
-    message: `${platformName} connected successfully.`,
+    message: `${platformName} connected successfully using ${integrationType} Integration.`,
   });
 });
