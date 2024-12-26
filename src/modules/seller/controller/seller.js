@@ -111,30 +111,30 @@ export const connectPlatform = asyncHandler(async (req, res) => {
   const { sellerId, platformName, storeURL, apiKey, secretKey, accessToken } =
     req.body;
 
+  // Verify seller existence
   const seller = await sellerModel.findById(sellerId);
   if (!seller) {
-    return res.status(404).json({
-      success: false,
-      message: "Seller not found.",
-    });
+    return res
+      .status(404)
+      .json({ success: false, message: "Seller not found." });
   }
 
+  // Validate required fields for each platform
   switch (platformName) {
     case "Shopify":
+    case "Salla":
       if (!accessToken) {
         return res.status(400).json({
           success: false,
-          message: "Access token is required for Shopify.",
+          message: "Access token is required for this platform.",
         });
       }
       break;
-    case "Salla":
     case "Zid":
       if (!apiKey) {
-        return res.status(400).json({
-          success: false,
-          message: "API key is required for Salla or Zid.",
-        });
+        return res
+          .status(400)
+          .json({ success: false, message: "API key is required for Zid." });
       }
       break;
     case "WooCommerce":
@@ -146,12 +146,12 @@ export const connectPlatform = asyncHandler(async (req, res) => {
       }
       break;
     default:
-      return res.status(400).json({
-        success: false,
-        message: "Unsupported platform.",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Unsupported platform." });
   }
 
+  // Prepare platform data
   const platformData = {
     platformName,
     storeURL,
@@ -160,11 +160,12 @@ export const connectPlatform = asyncHandler(async (req, res) => {
     accessToken: accessToken || null,
   };
 
+  // Save platform data to seller's profile
   seller.profileDetails.platforms.push(platformData);
   await seller.save();
 
   return res.status(200).json({
     success: true,
-    message: `Success send request to Watfa service to connect your ecommerce in ${platformName} with watfa`,
+    message: `${platformName} connected successfully.`,
   });
 });
