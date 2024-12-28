@@ -37,7 +37,7 @@ const bankInfoSchema = new Schema(
   { timestamps: true }
 );
 
-platformIntegrationSchema = new Schema(
+const platformIntegrationSchema = new Schema(
   {
     platformName: {
       type: String,

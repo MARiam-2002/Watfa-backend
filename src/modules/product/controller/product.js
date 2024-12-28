@@ -1,6 +1,7 @@
 import axios from "axios";
 import sellerModel from "../../../../DB/models/seller.model.js";
 import productModel from "../../../../DB/models/product.model.js";
+import { asyncHandler } from "../../../utils/asyncHandler.js";
 
 
 export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
