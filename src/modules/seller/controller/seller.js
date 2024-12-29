@@ -108,13 +108,22 @@ export const UpdateSellerProfile = asyncHandler(async (req, res) => {
 });
 
 export const connectPlatform = asyncHandler(async (req, res) => {
-  const { sellerId, platformName, storeURL, apiKey, secretKey, accessToken, additionalInfo } =
-    req.body;
+  const {
+    sellerId,
+    platformName,
+    storeURL,
+    apiKey,
+    secretKey,
+    accessToken,
+    additionalInfo,
+  } = req.body;
 
   // التحقق من وجود البائع
   const seller = await sellerModel.findById(sellerId);
   if (!seller) {
-    return res.status(404).json({ success: false, message: "Seller not found." });
+    return res
+      .status(404)
+      .json({ success: false, message: "Seller not found." });
   }
 
   // التحقق من نوع التكامل والحقول المطلوبة
@@ -133,7 +142,9 @@ export const connectPlatform = asyncHandler(async (req, res) => {
       });
     }
   } else {
-    return res.status(400).json({ success: false, message: "Invalid integration type." });
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid integration type." });
   }
 
   // إعداد بيانات المنصة
@@ -153,5 +164,56 @@ export const connectPlatform = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: `${platformName} connected successfully using ${integrationType} Integration.`,
+  });
+});
+
+export const login = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const seller = await seller.findOne({
+    email,
+  });
+
+  if (!seller) {
+    return res.status(404).json({
+      success: false,
+      message: "Seller not found. Please register.",
+    });
+  }
+
+  const isPasswordValid = bcryptjs.compareSync(password, seller.password);
+  if (!isPasswordValid) {
+    return next(
+      new Error("Invalid Password. Please try again.", { cause: 400 })
+    );
+  }
+
+  const token = jwt.sign(
+    {
+      id: seller._id,
+      email: seller.email,
+      userName: seller.userName,
+      role: seller.role,
+    },
+    process.env.TOKEN_KEY
+  );
+
+  await tokenModel.create({
+    token,
+    seller: newSeller._id,
+    agent: req.headers["user-agent"],
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Login successful.",
+    data: {
+      email: seller.email,
+      userName: seller.userName,
+      phone: seller.phoneNumber,
+      country: seller.country,
+      role: seller.role,
+      token,
+    },
   });
 });

@@ -2,30 +2,37 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import tokenModel from "../../DB/models/token.model.js";
 import userModel from "../../DB/models/user.model.js";
-export const isAuthenticated = asyncHandler(async (req, res, next) => {
-  let token = req.headers["token"];
+import sellerModel from "../../DB/models/seller.model.js";
 
+export const isAuthenticated = asyncHandler(async (req, res, next) => {
+  const token = req.headers["token"];
   if (!token) {
-    return next(new Error("valid token is required"));
+    return next(new Error("Valid token is required"));
   }
 
-  const decode = jwt.verify(token, process.env.TOKEN_KEY);
-  if (!decode) {
-    return next(new Error("Invalid-token"));
+  let decode;
+  try {
+    decode = jwt.verify(token, process.env.TOKEN_KEY);
+  } catch (error) {
+    return next(new Error("Invalid token"));
   }
 
   const tokenDB = await tokenModel.findOne({ token, isValid: true });
-
   if (!tokenDB) {
-    return next(new Error("Token expired!"));
+    return next(new Error("Token expired or invalid!"));
   }
 
   const user = await userModel.findById(decode.id);
-
-  if (!user) {
-    return next(new Error("user not found!"));
+  if (user) {
+    req.user = user;
+    return next();
   }
 
-  req.user = user;
-  return next();
+  const seller = await sellerModel.findById(decode.id);
+  if (seller) {
+    req.seller = seller;
+    return next();
+  }
+
+  return next(new Error("User not found!"));
 });
