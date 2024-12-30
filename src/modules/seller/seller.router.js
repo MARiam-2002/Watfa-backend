@@ -11,6 +11,6 @@ router.patch(
   sellerController.UpdateSellerProfile
 );
 
-router.post("/connect",sellerController.connectPlatform);
+router.post("/connect",isAuthenticated,sellerController.connectPlatform);
 
 export default router;

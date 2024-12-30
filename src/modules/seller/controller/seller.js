@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
 import sellerModel from "../../../../DB/models/seller.model.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
+import tokenModel from "../../../../DB/models/token.model.js";
 
 export const registerSeller = asyncHandler(async (req, res) => {
   const { userName, email, phoneNumber, password, role, country } = req.body;
-  const isSeller = await userModel.findOne({
+  const isSeller = await sellerModel.findOne({
     $or: [{ email: email }, { userName: userName }],
   });
 
@@ -26,10 +27,10 @@ export const registerSeller = asyncHandler(async (req, res) => {
 
   const token = jwt.sign(
     {
-      id: user._id,
-      email: user.email,
-      userName: user.userName,
-      role: user.role,
+      id: newSeller._id,
+      email: newSeller.email,
+      userName: newSeller.userName,
+      role: newSeller.role,
     },
     process.env.TOKEN_KEY
   );
@@ -109,7 +110,6 @@ export const UpdateSellerProfile = asyncHandler(async (req, res) => {
 
 export const connectPlatform = asyncHandler(async (req, res) => {
   const {
-    sellerId,
     platformName,
     storeURL,
     apiKey,
@@ -118,6 +118,8 @@ export const connectPlatform = asyncHandler(async (req, res) => {
     additionalInfo,
   } = req.body;
 
+  const sellerId = req.seller._id; // Assuming `req.user` contains the authenticated seller's ID.
+  
   // التحقق من وجود البائع
   const seller = await sellerModel.findById(sellerId);
   if (!seller) {
@@ -126,7 +128,22 @@ export const connectPlatform = asyncHandler(async (req, res) => {
       .json({ success: false, message: "Seller not found." });
   }
 
-  // التحقق من نوع التكامل والحقول المطلوبة
+  // التحقق من نوع المنصة والحقول المطلوبة
+  const validPlatforms = [
+    "Shopify",
+    "Salla",
+    "WooCommerce",
+    "Direct",
+    "Other"
+  ];
+
+  if (!validPlatforms.includes(platformName)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid integration type.",
+    });
+  }
+
   if (platformName === "Direct") {
     if (!apiKey || !secretKey) {
       return res.status(400).json({
@@ -142,9 +159,8 @@ export const connectPlatform = asyncHandler(async (req, res) => {
       });
     }
   } else {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid integration type." });
+    // يمكنك إضافة منطق خاص لكل منصة مثل "Shopify", "Salla", "WooCommerce"
+    // في حال لم يكن هناك متطلبات إضافية لهذه المنصات
   }
 
   // إعداد بيانات المنصة
@@ -163,9 +179,10 @@ export const connectPlatform = asyncHandler(async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: `${platformName} connected successfully using ${integrationType} Integration.`,
+    message: `You are send request to connect your ecommerce in platform${platformName} with Wtfa.`,
   });
 });
+
 
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;

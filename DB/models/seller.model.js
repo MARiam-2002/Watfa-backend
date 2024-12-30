@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import bcryptjs from "bcryptjs";
 
 // Sub-Schemas
 const legalInfoSchema = new Schema(
@@ -71,7 +72,6 @@ const sellerSchema = new Schema(
     },
     phoneNumber: {
       type: String,
-      match: /^[0-9]{10,15}$/,
     },
     password: { type: String, required: true },
     profileDetails: {
@@ -109,8 +109,10 @@ const sellerSchema = new Schema(
 // Pre-Save Hook for Password Hashing
 sellerSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    const bcrypt = require("bcrypt");
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = bcryptjs.hashSync(
+      this.password,
+        Number(process.env.SALT_ROUND)
+      );
   }
   next();
 });

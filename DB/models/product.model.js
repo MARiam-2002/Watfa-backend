@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
     sellerId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Types.ObjectId,
       ref: "Seller",
       required: true, // الإشارة إلى البائع الذي يمتلك المنتج
     },
@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema(
     },
     platformProductId: {
       type: String,
+      unique: true,
       required: true, // المعرف الخاص للمنتج في المنصة
     },
     title: {
@@ -24,9 +25,15 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number, // سعر المنتج
+      min: 0, // القيمة الافتراضية للسعر
     },
+    comparePrice: {
+      type: Number,
+    },
+
     currency: {
       type: String, // عملة السعر (مثل SAR, USD)
+      enum: ["SAR", "USD", "EUR"],
     },
     stock: {
       type: Number, // الكمية المتوفرة من المنتج
@@ -46,12 +53,16 @@ const productSchema = new mongoose.Schema(
     ],
     variants: [
       {
-        variantId: String, // معرف الخيار في المنصة
         title: String, // اسم الخيار (مثل الحجم أو اللون)
         price: Number, // السعر الخاص بالخيار
         stock: Number, // الكمية المتوفرة للخيار
       },
     ],
+    ratings: {
+      average: Number, // متوسط التقييم
+      count: Number, // عدد التقييمات
+    },
+
     storeURL: {
       type: String,
       required: true, // رابط المتجر الذي ينتمي إليه المنتج
