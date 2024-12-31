@@ -199,7 +199,7 @@ export const getAllCategoriesWithProducts = asyncHandler(async (req, res) => {
     }, {});
 
     const result = Object.entries(categoriesWithProducts).map(([category, products]) => ({
-      category:"عروض"+category, 
+      category:" عروض"+category, 
       products,
     }));
 
