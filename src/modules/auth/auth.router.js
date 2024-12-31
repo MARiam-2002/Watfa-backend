@@ -153,4 +153,12 @@ router.post(
 );
 
 router.get("/cards", isAuthenticated, userController.getCardsForUser);
+
+
+router.put(
+  "/redHeart/:productId",
+  isAuthenticated,
+userController.redHeart
+);
+router.get("/wishlist", isAuthenticated, userController.wishlist);
 export default router;

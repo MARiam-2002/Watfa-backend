@@ -49,8 +49,13 @@ const userSchema = new Schema(
       enum: ["buyer", "seller"],
       default: "buyer",
     },
-    wishlist: [Types.ObjectId],
-    cards: [
+    wishlist: [
+      {
+        type: Types.ObjectId,
+        ref: "Product", // تأكد من أن لديك موديل "Product"
+      },
+    ],
+        cards: [
       {
         type: Types.ObjectId,
         ref: "Card",

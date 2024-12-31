@@ -9,6 +9,7 @@ import tokenModel from "../../../../DB/models/token.model.js";
 import { countries } from "countries-list";
 import cloudinary from "../../../utils/cloud.js";
 import cardModel, { encrypt, luhnCheck } from "../../../../DB/models/crediteCard.model.js";
+import productModel from "../../../../DB/models/product.model.js";
 
 export const register = asyncHandler(async (req, res, next) => {
   const {
@@ -43,7 +44,6 @@ export const register = asyncHandler(async (req, res, next) => {
     password: hashPassword,
     phoneNumber,
     role,
-    companyName,
     country,
   });
 
@@ -373,5 +373,70 @@ export const getCardsForUser = asyncHandler(async (req, res, next) => {
     success: true,
     message: "User cards retrieved successfully!",
     data: user.cards,
+  });
+});
+
+
+
+export const redHeart = asyncHandler(async (req, res, next) => {
+  const { productId } = req.params;
+
+  
+
+  // Fetch product
+  const product = await productModel.findById(productId);
+  if (!product) {
+    return res.status(404).json({ success: false, message: "Product not found" });
+  }
+
+  // Fetch user
+  const user = await userModel.findById(req.user._id);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  // Ensure wishlist is an array
+  user.wishlist = user.wishlist || [];
+
+  // Check if product is already in the wishlist
+  const isLike = user.wishlist.includes(productId);
+
+  // Update wishlist
+  const updatedUser = await userModel.findByIdAndUpdate(
+    req.user._id,
+    {
+      [isLike ? "$pull" : "$addToSet"]: { wishlist: productId },
+    },
+    { new: true }
+  );
+
+  return res.status(200).json({
+    success: true,
+    status: 200,
+    message: isLike
+      ? "This product has been removed from the wishlist"
+      : "This product has been added to the wishlist",
+  });
+});
+
+
+
+
+export const wishlist = asyncHandler(async (req, res, next) => {
+ 
+  // Fetch the user with populated fields
+  let user = await userModel.findById(req.user._id).populate("wishlist"); 
+
+  if (!user) {
+    return next(new Error("User not found", { status: 404 }));
+  }
+
+  
+
+  return res.status(200).json({
+    success: true,
+    status: 200,
+    message: "These are all the products that you added to the wishlist",
+    data: user.wishlist,
   });
 });
