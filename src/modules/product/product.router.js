@@ -5,6 +5,6 @@ const router = Router();
 
 router.post("/fetch-products",isAuthenticated, productController.fetchProductsFromPlatform);
 router.get("/getAllCateWithProd",productController.getAllCategoriesWithProducts)
-router.get("get-all-categories",productController.getAllCategories)
+router.get("/get-all-categories",productController.getAllCategories)
 
 export default router;
