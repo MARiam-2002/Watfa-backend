@@ -30,7 +30,6 @@ const productSchema = new mongoose.Schema(
     comparePrice: {
       type: Number,
     },
-
     currency: {
       type: String, // عملة السعر (مثل SAR, USD)
       enum: ["SAR", "USD", "EUR"],
@@ -43,6 +42,9 @@ const productSchema = new mongoose.Schema(
         type: String, // روابط الصور الخاصة بالمنتج
       },
     ],
+    logo: {  // إضافة حقل اللوجو
+      type: String,  // رابط اللوجو
+    },
     category: {
       type: String, // تصنيف المنتج (إذا توفر)
     },
@@ -62,7 +64,6 @@ const productSchema = new mongoose.Schema(
       average: Number, // متوسط التقييم
       count: Number, // عدد التقييمات
     },
-
     storeURL: {
       type: String,
       required: true, // رابط المتجر الذي ينتمي إليه المنتج
@@ -74,6 +75,7 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 
 const productModel =
   mongoose.models.productModel || mongoose.model("Product", productSchema);

@@ -26,6 +26,9 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
       .json({ success: false, message: "Platform not connected." });
   }
 
+  // جلب شعار المتجر
+  const storeLogo = await fetchStoreLogo(platform);
+
   // جلب المنتجات بناءً على نوع المنصة
   let products = [];
   switch (platformName) {
@@ -62,11 +65,13 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
         platformName,
         platformProductId: product.id || product.productId,
         title: product.title || product.name,
-        description: product.body_html.replace(/<[^>]*>/g, '') || product.description.replace(/<[^>]*>/g, ''),
+        description:
+          product.body_html?.replace(/<[^>]*>/g, "") ||
+          product.description?.replace(/<[^>]*>/g, ""),
         price:
           product.price || (product.variants && product.variants[0]?.price),
         comparePrice:
-          (product.variants && product.variants[0]?.compare_at_price) || null, // إضافة السعر القديم إذا كان موجودًا
+          (product.variants && product.variants[0]?.compare_at_price) || null,
         currency: product.currency || "SAR",
         stock: product.inventory_quantity || product.stock,
         images: product.images?.map((img) => img.src) || [],
@@ -75,13 +80,14 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
         variants: product.variants.map((variant) => ({
           title: variant.title,
           price: variant.price,
-          stock: variant.inventory_quantity || variant.stock, // تأكد من أنك تستخدم القيم الصحيحة
+          stock: variant.inventory_quantity || variant.stock,
         })),
         ratings: {
-          average: product.average_rating || 0,  // إضافة متوسط التقييم
-          count: product.reviews_count || 0,     // إضافة عدد التقييمات
+          average: product.average_rating || 0,
+          count: product.reviews_count || 0,
         },
-        storeURL: storeURL,
+        storeLogo, // إضافة شعار المتجر لكل منتج
+        storeURL,
       });
 
       return newProduct.save();
@@ -95,6 +101,41 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
   });
 });
 
+// جلب شعار المتجر بناءً على نوع المنصة
+const fetchStoreLogo = async (platform) => {
+  switch (platform.platformName) {
+    case "Shopify":
+      const shopifyResponse = await axios.get(
+        `${platform.storeURL}/admin/api/2024-01/shop.json`,
+        {
+          headers: { "X-Shopify-Access-Token": platform.accessToken },
+        }
+      );
+      return shopifyResponse.data.shop.image?.src || "DefaultLogoURL";
+
+    case "Salla":
+      const sallaResponse = await axios.get(
+        `${platform.storeURL}/api/v1/store-info`,
+        {
+          headers: { Authorization: `Bearer ${platform.accessToken}` },
+        }
+      );
+      return sallaResponse.data.logo || "DefaultLogoURL";
+
+    case "Zid":
+      const zidResponse = await axios.get(`${platform.storeURL}/api/v1/store`, {
+        headers: { "Api-Key": platform.apiKey },
+      });
+      return zidResponse.data.store_logo || "DefaultLogoURL";
+
+    case "WooCommerce":
+      return `${platform.storeURL}/wp-content/uploads/logo.png`; // تعديل بناءً على مكان وجود الشعار في WooCommerce
+
+    default:
+      return "DefaultLogoURL";
+  }
+};
+
 // دوال مساعدة لجلب المنتجات من APIs مختلفة
 const fetchShopifyProducts = async (platform) => {
   const url = `${platform.storeURL}/admin/api/2024-01/products.json`;
@@ -102,17 +143,11 @@ const fetchShopifyProducts = async (platform) => {
     headers: { "X-Shopify-Access-Token": platform.accessToken },
   });
 
-  return response.data.products.map(product => {
-    const category = product.collections?.[0]?.title || product.tags?.[0] || "Uncategorized"; // استخراج الفئة من collections أو tags
-    const averageRating = product.metafields?.rating || 0;  // تأكد من مصدر التقييمات
-    const reviewCount = product.reviews_count || 0;
-
-    return {
-      ...product,
-      category,  // إضافة الفئة
-      ratings: { average: averageRating, count: reviewCount },  // إضافة التقييمات
-    };
-  });
+  return response.data.products.map((product) => ({
+    ...product,
+    category:
+      product.collections?.[0]?.title || product.tags?.[0] || "Uncategorized",
+  }));
 };
 
 const fetchSallaProducts = async (platform) => {
@@ -121,17 +156,10 @@ const fetchSallaProducts = async (platform) => {
     headers: { Authorization: `Bearer ${platform.accessToken}` },
   });
 
-  return response.data.data.map(product => {
-    const category = product.category || "Uncategorized";  // تأكد من المسار الصحيح للفئة
-    const averageRating = product.average_rating || 0;
-    const reviewCount = product.reviews_count || 0;
-
-    return {
-      ...product,
-      category,  // إضافة الفئة
-      ratings: { average: averageRating, count: reviewCount },  // إضافة التقييمات
-    };
-  });
+  return response.data.data.map((product) => ({
+    ...product,
+    category: product.category || "Uncategorized",
+  }));
 };
 
 const fetchZidProducts = async (platform) => {
@@ -140,33 +168,60 @@ const fetchZidProducts = async (platform) => {
     headers: { "Api-Key": platform.apiKey },
   });
 
-  return response.data.products.map(product => {
-    const category = product.category || "Uncategorized";  // تأكد من المسار الصحيح للفئة
-    const averageRating = product.average_rating || 0;
-    const reviewCount = product.reviews_count || 0;
-
-    return {
-      ...product,
-      category,  // إضافة الفئة
-      ratings: { average: averageRating, count: reviewCount },  // إضافة التقييمات
-    };
-  });
+  return response.data.products.map((product) => ({
+    ...product,
+    category: product.category || "Uncategorized",
+  }));
 };
 
 const fetchWooCommerceProducts = async (platform) => {
   const url = `${platform.storeURL}/wp-json/wc/v3/products?consumer_key=${platform.apiKey}&consumer_secret=${platform.secretKey}`;
   const response = await axios.get(url);
 
-  return response.data.map(product => {
-    const category = product.categories?.[0]?.name || "Uncategorized";  // استخراج الفئة
-    const averageRating = product.average_rating || 0;
-    const reviewCount = product.review_count || 0;
-
-    return {
-      ...product,
-      category,  // إضافة الفئة
-      ratings: { average: averageRating, count: reviewCount },  // إضافة التقييمات
-    };
-  });
+  return response.data.map((product) => ({
+    ...product,
+    category: product.categories?.[0]?.name || "Uncategorized",
+  }));
 };
 
+export const getAllCategoriesWithProducts = asyncHandler(async (req, res) => {
+  const products = await productModel.find().select("-__v");
+
+    if (!products.length) {
+      return res.status(404).json({ message: "No products found" });
+    }
+
+    const categoriesWithProducts = products.reduce((acc, product) => {
+      const { category } = product;
+      acc[category] = acc[category] || []; // إذا لم تكن الفئة موجودة، قم بإنشائها
+      acc[category].push(product); // أضف المنتج إلى الفئة
+      return acc;
+    }, {});
+
+    const result = Object.entries(categoriesWithProducts).map(([category, products]) => ({
+      category,
+      products,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    }); 
+ 
+});
+export const getAllCategories = async (req, res) => {
+    const categories = await productModel.distinct("category");
+
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No categories found" 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      data: categories 
+    });
+
+};
