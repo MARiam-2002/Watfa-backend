@@ -81,7 +81,27 @@ const sellerSchema = new Schema(
         enum: ["Registered Business", "Freelancer", "Other"],
       },
       operationsCountry: String,
-      productsOrServices: String,
+      productsOrServices: {
+        type: String,
+        enum: [
+          "Fashion",
+          "Beauty",
+          "Skincare",
+          "Health",
+          "Technology & Electronics",
+          "Games",
+          "Restaurants",
+          "Travel",
+          "Furniture & Decor",
+          "Sports",
+          "Cosmetics",
+          "Bags",
+          "Accessories",
+          "Supermarket",
+          "Books & Magazines",
+          "Cars & Motorcycles",
+        ],
+      },
       storeLink: String,
       platforms: [platformIntegrationSchema],
       legalInfo: legalInfoSchema,
@@ -111,8 +131,8 @@ sellerSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = bcryptjs.hashSync(
       this.password,
-        Number(process.env.SALT_ROUND)
-      );
+      Number(process.env.SALT_ROUND)
+    );
   }
   next();
 });
