@@ -68,7 +68,6 @@ export const registerSchema = joi
         "any.only": "Confirm Password must match the New Password.",
       }),
 
-    country: joi.string().required().label("Country").messages(defaultMessages),
   })
   .required();
 
