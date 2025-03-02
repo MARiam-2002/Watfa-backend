@@ -16,6 +16,7 @@ export const register = asyncHandler(async (req, res, next) => {
     email,
     userName,
     password,
+    role,
     phoneNumber,
     country,
   } = req.body;
@@ -39,6 +40,7 @@ export const register = asyncHandler(async (req, res, next) => {
 
   const user = await userModel.create({
     userName,
+    role,
     email,
     password: hashPassword,
     phoneNumber,
@@ -50,6 +52,7 @@ export const register = asyncHandler(async (req, res, next) => {
       id: user._id,
       email: user.email,
       userName: user.userName,
+      role: user.role,
     },
     process.env.TOKEN_KEY
   );

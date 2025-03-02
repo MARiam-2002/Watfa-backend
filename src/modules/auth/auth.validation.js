@@ -25,6 +25,13 @@ export const registerSchema = joi
       .label("Username")
       .messages(defaultMessages),
 
+    role: joi
+      .string()
+      .valid("buyer", "seller")
+      .required()
+      .label("Role")
+      .messages(defaultMessages),
+
     phoneNumber: joi
       .string()
       .when("role", {
