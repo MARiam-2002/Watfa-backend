@@ -105,13 +105,19 @@ export const fetchProductsFromPlatform = asyncHandler(async (req, res) => {
 const fetchStoreLogo = async (platform) => {
   switch (platform.platformName) {
     case "Shopify":
-      const shopifyResponse = await axios.get(
-        `${platform.storeURL}/admin/api/2024-01/shop.json`,
-        {
-          headers: { "X-Shopify-Access-Token": platform.accessToken },
-        }
-      );
-      return shopifyResponse.data.shop.image?.src || "DefaultLogoURL";
+      try {
+        const shopifyResponse = await axios.get(
+          `${platform.storeURL}/admin/api/2024-01/shop.json`,
+          {
+            headers: { "X-Shopify-Access-Token": platform.accessToken },
+          }
+        );
+        console.log("Shopify Response:", shopifyResponse.data); // Log the response
+        return shopifyResponse.data.shop.image?.src || "DefaultLogoURL";
+      } catch (error) {
+        console.error("Error fetching Shopify logo:", error);
+        return "DefaultLogoURL"; // Return a default logo in case of an error
+      }
 
     case "Salla":
       const sallaResponse = await axios.get(
@@ -129,12 +135,13 @@ const fetchStoreLogo = async (platform) => {
       return zidResponse.data.store_logo || "DefaultLogoURL";
 
     case "WooCommerce":
-      return `${platform.storeURL}/wp-content/uploads/logo.png`; // تعديل بناءً على مكان وجود الشعار في WooCommerce
+      return `${platform.storeURL}/wp-content/uploads/logo.png`; // Modify based on location of logo in WooCommerce
 
     default:
       return "DefaultLogoURL";
   }
 };
+
 
 // دوال مساعدة لجلب المنتجات من APIs مختلفة
 const fetchShopifyProducts = async (platform) => {

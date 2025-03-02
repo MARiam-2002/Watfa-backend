@@ -121,6 +121,10 @@ const sellerSchema = new Schema(
         ref: "Notification",
       },
     ],
+    logo:{
+      type: String,
+      default: "https://res.cloudinary.com/dj7k9bpa8/image/upload/v1632834887/placeholder.png",
+    }
   },
 
   { timestamps: true }

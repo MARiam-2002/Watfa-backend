@@ -17,7 +17,6 @@ export const register = asyncHandler(async (req, res, next) => {
     userName,
     password,
     phoneNumber,
-    role,
     country,
   } = req.body;
 
@@ -43,7 +42,6 @@ export const register = asyncHandler(async (req, res, next) => {
     email,
     password: hashPassword,
     phoneNumber,
-    role,
     country,
   });
 
@@ -52,7 +50,6 @@ export const register = asyncHandler(async (req, res, next) => {
       id: user._id,
       email: user.email,
       userName: user.userName,
-      role: user.role,
     },
     process.env.TOKEN_KEY
   );
