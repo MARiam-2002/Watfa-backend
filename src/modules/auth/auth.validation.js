@@ -1,14 +1,14 @@
 import joi from "joi";
 
 const defaultMessages = {
-  "string.base": "{#label} must be a string.",
-  "string.empty": "{#label} cannot be empty.",
-  "string.min": "{#label} must be at least {#limit} characters long.",
-  "string.max": "{#label} must be at most {#limit} characters long.",
-  "string.pattern.base": "{#label} format is invalid.",
-  "any.required": "{#label} is required.",
-  "any.only": "{#label} must match one of the allowed values.",
-  "string.email": "{#label} must be a valid email address.",
+  "string.base": "{#label} يجب أن يكون نصًا.",
+  "string.empty": "{#label} مطلوب ولا يمكن أن يكون فارغًا.",
+  "string.min": "{#label} يجب أن يكون على الأقل {#limit} أحرف.",
+  "string.max": "{#label} يجب ألا يزيد عن {#limit} أحرف.",
+  "string.pattern.base": "{#label} يحتوي على تنسيق غير صالح.",
+  "any.required": "{#label} مطلوب.",
+  "any.only": "{#label} يجب أن يكون من القيم المسموح بها.",
+  "string.email": "البريد الإلكتروني غير صالح، يرجى إدخال بريد إلكتروني صحيح.",
 };
 
 export const registerSchema = joi
@@ -17,20 +17,28 @@ export const registerSchema = joi
       .string()
       .email()
       .required()
-      .label("Email")
-      .messages(defaultMessages),
+      .messages({
+        "string.empty": "البريد الإلكتروني مطلوب.",
+        "string.email": "يرجى إدخال بريد إلكتروني صحيح.",
+        "any.required": "البريد الإلكتروني مطلوب.",
+      }),
+
     userName: joi
       .string()
       .required()
-      .label("Username")
-      .messages(defaultMessages),
+      .messages({
+        "string.empty": "اسم المستخدم مطلوب.",
+        "any.required": "اسم المستخدم مطلوب.",
+      }),
 
     role: joi
       .string()
       .valid("buyer", "seller")
       .required()
-      .label("Role")
-      .messages(defaultMessages),
+      .messages({
+        "any.only": "الدور يجب أن يكون إما 'buyer' أو 'seller'.",
+        "any.required": "الدور مطلوب.",
+      }),
 
     phoneNumber: joi
       .string()
@@ -38,38 +46,45 @@ export const registerSchema = joi
         is: "seller",
         then: joi
           .required()
-          .label("Phone Number")
           .messages({
-            ...defaultMessages,
+            "string.empty": "رقم الهاتف مطلوب للبائع.",
             "string.pattern.base":
-              "Phone number must be a valid Saudi number starting with +966 or 05 and contain 9 digits.",
+              "رقم الهاتف يجب أن يكون رقمًا سعوديًا يبدأ بـ +966 أو 05 ويحتوي على 9 أرقام.",
+            "any.required": "رقم الهاتف مطلوب للبائع.",
           }),
-      })
-      .messages(defaultMessages),
+      }),
 
     password: joi
       .string()
       .regex(/^(?=.*[A-Z])(?=.*\d|.*[!@#$%^&*(),.?":{}|<>])(?=.{8,}).*$/)
       .required()
-      .label("Password")
       .messages({
-        ...defaultMessages,
+        "string.empty": "كلمة المرور مطلوبة.",
         "string.pattern.base":
-          "Password must be at least 8 characters long, contain at least one uppercase letter, and include either a number or a special character.",
+          "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل، وتحتوي على حرف كبير واحد على الأقل، ويجب أن تتضمن رقمًا أو رمزًا خاصًا.",
+        "any.required": "كلمة المرور مطلوبة.",
       }),
 
     confirmPassword: joi
       .string()
       .valid(joi.ref("password"))
       .required()
-      .label("Confirm Password")
       .messages({
-        ...defaultMessages,
-        "any.only": "Confirm Password must match the New Password.",
+        "string.empty": "تأكيد كلمة المرور مطلوب.",
+        "any.only": "تأكيد كلمة المرور يجب أن يتطابق مع كلمة المرور الجديدة.",
+        "any.required": "تأكيد كلمة المرور مطلوب.",
       }),
 
+    country: joi
+      .string()
+      .required()
+      .messages({
+        "string.empty": "الدولة مطلوبة.",
+        "any.required": "الدولة مطلوبة.",
+      }),
   })
   .required();
+
 
 export const loginSchema = joi
   .object({
