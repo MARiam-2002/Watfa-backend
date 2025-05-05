@@ -4,7 +4,7 @@ import bcryptjs from "bcryptjs";
 import crypto, { randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../../../utils/sendEmails.js";
-import { resetPassword, signupTemp } from "../../../utils/generateHtml.js";
+import { resetPassword } from "../../../utils/generateHtml.js";
 import tokenModel from "../../../../DB/models/token.model.js";
 import { countries } from "countries-list";
 import cloudinary from "../../../utils/cloud.js";
